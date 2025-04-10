@@ -3,7 +3,7 @@ import "./Titlebar.css";
 
 export default function TitleBar(props: { state: AppState }) {
     return (
-        <div class="titlebar">
+        <div data-tauri-drag-region class="titlebar">
             <div class="tab-controls">
                 <button><i class="fa-solid fa-arrow-left"></i></button>
                 <button><i class="fa-solid fa-arrow-right"></i></button>
