@@ -12,37 +12,27 @@ body,
 
 .app {
   height: 100%;
-  background: linear-gradient(160deg, rgba(182, 226, 245, 1), rgba(247, 212, 158, 1));
+  /* background: linear-gradient(160deg, rgba(182, 226, 245, 1), rgba(247, 212, 158, 1)); */
+  background-color: #E9E8FD;
   display: flex;
 }
 
-.sidebar-container {
-  width: 350px;
-  height: 100%;
-}
-
-.browser-container {
+.main {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
 }
 
+.sidebar {
+  width: 350px;
+  height: 100%;
+}
+
 .browser {
   height: 100%;
-  margin: 8px;
-  border-radius: 8px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
-}
-
-.titlebar {
-  height: 0px;
-  width: 100%;
-  background-color: bisque;
-  transition: height 0.3s ease;
-  transform-origin: top;
-}
-
-.titlebar:hover {
-  height: 30px;
+  margin: 0px 8px 8px 8px;
+  border-radius: 7px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  background-color: #FAF9FE;
 }

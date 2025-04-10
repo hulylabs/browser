@@ -1,5 +1,6 @@
 import { CEFClient } from "cef-client";
 import { createUniqueId } from "solid-js";
+import { Window } from "@tauri-apps/api/window";
 
 export class Tab {
     id: string;
@@ -27,10 +28,12 @@ export class Tab {
 export class AppState {
     cefClients: Map<string, CEFClient>;
     tabs: Tab[];
+    window: Window;
 
-    constructor() {
+    constructor(window: Window) {
         this.cefClients = new Map();
         this.tabs = [];
+        this.window = window;
     }
 
     newTab() {
@@ -44,5 +47,17 @@ export class AppState {
             this.cefClients.set(tabId, cefClient);
             this.tabs.push(tab);
         }
+    }
+
+    closeWindow() {
+        this.window.close();
+    }
+
+    minimizeWindow() {
+        this.window.minimize();
+    }
+
+    maximizeWindow() {
+        this.window.toggleMaximize();
     }
 }
