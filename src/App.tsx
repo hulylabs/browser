@@ -1,8 +1,11 @@
+import { For } from "solid-js";
 import "./App.css";
 import Input from "./components/Input";
+import Tab from "./components/Tab";
 import TitleBar from "./components/TitleBar";
 import { AppState } from "./model";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import NewTabButton from "./components/NewTabButton";
 
 
 function App() {
@@ -15,6 +18,11 @@ function App() {
       <div class="sidebar">
         <div class="buttons"></div>
         <Input />
+        <NewTabButton onClick={() => appState.newTab()} />
+        <For each={appState.tabs}>{(tab) => (
+          <Tab model={tab} />
+        )}
+        </For>
       </div>
 
       <div class="main">

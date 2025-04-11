@@ -3,8 +3,7 @@
     width: 100%;
     margin: 4px 0px;
     padding: 0px 8px;
-    background-color: #E9E8FD;
-    /* background-color: #DDDDDD; */
+    background-color: transparent;
 
     display: flex;
     justify-content: space-between;
