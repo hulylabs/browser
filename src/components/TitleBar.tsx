@@ -1,7 +1,7 @@
-import { AppState } from "../model";
+import { App } from "../model";
 import "./Titlebar.css";
 
-export default function TitleBar(props: { state: AppState }) {
+export default function TitleBar(props: { state: App }) {
     return (
         <div data-tauri-drag-region class="titlebar">
             <div class="tab-controls">

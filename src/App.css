@@ -12,8 +12,8 @@ body,
 
 .app {
   height: 100%;
-  background: linear-gradient(160deg, rgba(182, 226, 245, 1), rgba(247, 212, 158, 1));
-  /* background-color: #E9E8FD; */
+  /* background: linear-gradient(160deg, rgba(182, 226, 245, 1), rgba(247, 212, 158, 1)); */
+  background-color: #E9E8FD;
   display: flex;
 }
 
