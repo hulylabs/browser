@@ -1,4 +1,5 @@
 import "./App.css";
+import Input from "./components/Input";
 import TitleBar from "./components/TitleBar";
 import { AppState } from "./model";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -11,7 +12,10 @@ function App() {
 
   return (
     <div class="app">
-      <div class="sidebar"></div>
+      <div class="sidebar">
+        <div class="buttons"></div>
+        <Input />
+      </div>
 
       <div class="main">
         <TitleBar state={appState} />

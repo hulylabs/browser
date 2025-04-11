@@ -1,0 +1,13 @@
+.input-wrapper {
+    padding: 0px 10px;
+}
+
+.input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+    outline: none;
+}
