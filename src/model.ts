@@ -5,29 +5,13 @@ import { createStore, SetStoreFunction } from "solid-js/store";
 
 type BrowserId = string;
 
-export class TabModel {
+export interface TabModel {
     id: BrowserId;
     title: string;
-    // TODO: maybe wrap with weak ref?
-    state: App;
 
-    constructor(state: App, id: BrowserId, title: string) {
-        this.id = id;
-        this.title = title;
-        this.state = state;
-    }
-
-    goto(url: string) {
-        this.state.goto(this.id, url);
-    }
-
-    active(): boolean {
-        return this.state.getActiveTab().id == this.id;
-    }
-
-    activate() {
-        this.state.setActiveTab(this.id);
-    }
+    goto: (url: string) => void;
+    active: () => boolean;
+    activate: () => void;
 }
 
 export class App {
@@ -52,20 +36,17 @@ export class App {
 
         ws.onopen = () => {
             let cefClient = new CEFClient(ws);
-            let tab = new TabModel(this, createUniqueId(), "New Tab");
+            let tab: TabModel = {
+                id: createUniqueId(),
+                title: "New Tab",
+
+                goto: (url: string) => cefClient.goTo(url),
+                active: () => this.getActiveTab().id == tab.id,
+                activate: () => this.setActiveTab(tab.id),
+            };
 
             cefClient.onTitleChanged = (title: string) => {
-                console.log(`Title changed to ${title}`);
-                let index = this.tabs.findIndex((t => t.id === tab.id));
-                console.log(`Tab index: ${index}`);
-
-                if (index != -1) {
-                    this.setTabs(index, "title", title);
-                }
-
-                for (let tab of this.tabs) {
-                    console.log(tab);
-                }
+                this.setTabs((tabs) => tabs.id == tab.id, "title", title);
             }
 
             this.cefClients.set(tab.id, cefClient);
