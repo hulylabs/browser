@@ -1,95 +1,86 @@
 import { createEffect, onMount } from "solid-js";
 import { App } from "../model";
+import "./Browser.css";
 
 function Browser(props: { state: App }) {
-    let canvas_container: HTMLDivElement | undefined;
-    let canvas: HTMLCanvasElement | undefined;
-    let imageData: ImageData | undefined;
-
-    createEffect(() => {
-        let cefClient = props.state.cefClients.get(props.state.getActiveTab().id);
-
-        if (!canvas) return console.log("canvas not found");
-
-        let ctx = canvas.getContext("2d");
-        if (!ctx) return console.log("failed to get 2d context");
-
-
-        if (cefClient) {
-            cefClient.onRender = (data) => {
-                if (!imageData) return console.log("imageData not found");
-                imageData.data.set(data);
-                ctx.putImageData(imageData, 0, 0);
-            };
-        }
-    });
+    let canvasContainer!: HTMLDivElement;
+    let canvas!: HTMLCanvasElement;
+    let imageData!: ImageData;
+    let renderingCtx!: CanvasRenderingContext2D;
 
     onMount(() => {
-        if (!canvas_container) return console.log("canvas container not found");
-        if (!canvas) return console.log("canvas not found");
-
         let ctx = canvas.getContext("2d");
-        if (!ctx) return console.log("failed to get 2d context");
 
-        const style = window.getComputedStyle(canvas);
+        if (ctx == null)
+            return console.error("Failed to get canvas context");
 
+        renderingCtx = ctx;
+
+        const style = window.getComputedStyle(canvasContainer!);
         const width = parseFloat(style.width);
         const height = parseFloat(style.height);
 
         canvas.width = width;
         canvas.height = height;
+        imageData = renderingCtx.createImageData(width, height);
 
-        imageData = ctx.createImageData(width, height);
-        // props.cefClient.onResize(width, height);
-        // props.cefClient.startVideo();
+        const resizeObserver = new ResizeObserver(entries => {
+            console.log("entries", entries);
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                console.log("width", width);
+                console.log("height", height);
+                canvas.width = width;
+                canvas.height = height;
+                imageData = renderingCtx.createImageData(width, height)
+            }
+        });
 
-        // canvas.onmousemove = function (e) {
-        //     props.cefClient.onMouseMove(e.offsetX, e.offsetY);
-        // };
+        resizeObserver.observe(canvasContainer);
+    });
 
-        // canvas.onmousedown = function (e) {
-        //     props.cefClient.onMouseDown(e.offsetX, e.offsetY, e.button);
-        // };
+    createEffect(() => {
+        let activeTab = props.state.getActiveTab();
+        if (activeTab === undefined)
+            return console.log("failed to get active tab");
 
-        // canvas.onmouseup = function (e) {
-        //     props.cefClient.onMouseUp(e.offsetX, e.offsetY, e.button);
-        // };
+        let cefClient = props.state.cefClients.get(activeTab.id)!;
 
-        // canvas.onwheel = function (e) {
-        //     props.cefClient.onMouseWheel(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
-        // };
+        cefClient.onResize(canvas.width, canvas.height);
+        cefClient.onRender = (data) => {
+            imageData.data.set(data);
+            renderingCtx.putImageData(imageData, 0, 0);
+        };
 
-        // const resizeObserver = new ResizeObserver(entries => {
-        //     for (let entry of entries) {
-        //         const { width, height } = entry.contentRect;
-        //         canvas.width = width;
-        //         canvas.height = height;
-        //         imageData = ctx.createImageData(width, height)
+        canvas.onmousemove = function (e) {
+            cefClient.onMouseMove(e.offsetX, e.offsetY);
+        };
 
-        //         props.cefClient.onResize(width, height);
-        //     }
-        // });
+        canvas.onmousedown = function (e) {
+            cefClient.onMouseDown(e.offsetX, e.offsetY, e.button);
+        };
 
-        // resizeObserver.observe(canvas_container);
+        canvas.onmouseup = function (e) {
+            cefClient.onMouseUp(e.offsetX, e.offsetY, e.button);
+        };
 
-        // props.cefClient.onCursorChanged = (cursor) => {
-        //     if (cursor === "Hand") {
-        //         canvas.style.cursor = "pointer";
-        //     }
+        canvas.onwheel = function (e) {
+            cefClient.onMouseWheel(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
+        };
 
-        //     if (cursor === "Pointer") {
-        //         canvas.style.cursor = "default";
-        //     }
-        // };
+        cefClient.onCursorChanged = (cursor) => {
+            if (cursor === "Hand") {
+                canvas.style.cursor = "pointer";
+            }
 
-        // props.cefClient.onRender = (data) => {
-        //     imageData.data.set(data);
-        //     ctx.putImageData(imageData, 0, 0);
-        // };
+            if (cursor === "Pointer") {
+                canvas.style.cursor = "default";
+            }
+        };
     });
 
     return <>
-        <div class="canvas-container" ref={canvas_container}>
+        <div class="canvas-container" ref={canvasContainer}>
             <canvas class="canvas" ref={canvas}></canvas>
         </div>
     </>

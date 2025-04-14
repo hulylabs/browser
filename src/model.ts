@@ -26,13 +26,15 @@ export class App {
 
     constructor(window: Window) {
         [this.tabs, this.setTabs] = createStore<TabModel[]>([]);
-        [this.activeTabIndex, this.setActiveTabIndex] = createSignal<number>(0);
+        [this.activeTabIndex, this.setActiveTabIndex] = createSignal<number>(-1);
         this.cefClients = new Map();
         this.window = window;
     }
 
     newTab() {
         let ws = new WebSocket("ws://localhost:8080/");
+        // TODO: Remove this
+        ws.binaryType = "arraybuffer";
 
         ws.onopen = () => {
             let cefClient = new CEFClient(ws);
@@ -41,8 +43,11 @@ export class App {
                 title: "New Tab",
 
                 goto: (url: string) => cefClient.goTo(url),
-                active: () => this.getActiveTab().id == tab.id,
-                activate: () => this.setActiveTab(tab.id),
+                active: () => this.getActiveTab() ? tab.id === this.getActiveTab()!.id : false,
+                activate: () => {
+                    this.setActiveTab(tab.id);
+                    cefClient.startVideo();
+                }
             };
 
             cefClient.onTitleChanged = (title: string) => {
@@ -55,7 +60,7 @@ export class App {
         }
     }
 
-    getActiveTab(): TabModel {
+    getActiveTab(): TabModel | undefined {
         return this.tabs[this.activeTabIndex()];
     }
 
