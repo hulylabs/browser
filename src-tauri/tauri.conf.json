@@ -14,8 +14,7 @@
       {
         "title": "huly-browser",
         "width": 800,
-        "height": 600,
-        "decorations": false
+        "height": 600
       }
     ],
     "security": {

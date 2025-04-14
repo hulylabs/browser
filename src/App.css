@@ -38,8 +38,9 @@ body,
 
 .browser {
   height: 100%;
-  margin: 0px 8px 8px 8px;
+  margin: 8px 8px 8px 8px;
   border-radius: 7px;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
   background-color: #FAF9FE;
+  overflow: hidden;
 }

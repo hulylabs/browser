@@ -27,7 +27,6 @@ function AppComponent() {
       </div>
 
       <div class="main">
-        <TitleBar state={app} />
         <div class="browser">
           <Browser state={app} />
         </div>

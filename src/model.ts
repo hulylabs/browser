@@ -33,8 +33,6 @@ export class App {
 
     newTab() {
         let ws = new WebSocket("ws://localhost:8080/");
-        // TODO: Remove this
-        ws.binaryType = "arraybuffer";
 
         ws.onopen = () => {
             let cefClient = new CEFClient(ws);
