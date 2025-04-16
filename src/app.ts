@@ -1,6 +1,5 @@
 import { CEFClient } from "cef-client";
 import { Accessor, createSignal, createUniqueId, Setter } from "solid-js";
-import { Window } from "@tauri-apps/api/window";
 import { createStore, SetStoreFunction } from "solid-js/store";
 
 type BrowserId = string;
@@ -22,13 +21,10 @@ export class App {
     activeTabIndex: Accessor<number>;
     setActiveTabIndex: Setter<number>;
 
-    window: Window;
-
-    constructor(window: Window) {
+    constructor() {
         [this.tabs, this.setTabs] = createStore<TabModel[]>([]);
         [this.activeTabIndex, this.setActiveTabIndex] = createSignal<number>(-1);
         this.cefClients = new Map();
-        this.window = window;
     }
 
     newTab() {
@@ -74,17 +70,5 @@ export class App {
         if (cefClient) {
             cefClient.goTo(url);
         }
-    }
-
-    closeWindow() {
-        this.window.close();
-    }
-
-    minimizeWindow() {
-        this.window.minimize();
-    }
-
-    maximizeWindow() {
-        this.window.toggleMaximize();
     }
 }

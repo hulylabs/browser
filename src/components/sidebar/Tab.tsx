@@ -1,4 +1,4 @@
-import { TabModel } from "../../model";
+import { TabModel } from "../../app";
 import "./Tab.css";
 
 export default function Tab(props: { tab: TabModel }) {
@@ -6,6 +6,6 @@ export default function Tab(props: { tab: TabModel }) {
         <div class="tab" classList={{ "active": props.tab.active() }} onClick={() => props.tab.activate()}>
             <div class="icon"></div>
             <p>{props.tab.title}</p>
-        </ div>
+        </div>
     )
 }

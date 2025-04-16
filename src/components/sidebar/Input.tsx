@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { App } from "../../model";
+import { App } from "../../app";
 import "./Input.css";
 
 export default function Input(props: { app: App }) {
