@@ -1,16 +1,13 @@
-import Browser from "./components/Browser";
-import "./AppState.css";
 import { For } from "solid-js";
+import { AppState } from "./state";
+import Browser from "./components/Browser";
 import Input from "./components/sidebar/Input";
 import NewTabButton from "./components/sidebar/NewTabButton";
 import Tab from "./components/sidebar/Tab";
-import { AppState } from "./state";
-import hotkeys from "hotkeys-js";
+import "./App.css";
 
 function AppComponent() {
   let app = new AppState();
-
-  hotkeys('ctrl+n', app.newTab);
 
   return (
     <div class="app">

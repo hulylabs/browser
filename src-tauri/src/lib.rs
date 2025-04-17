@@ -4,6 +4,13 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+#[cfg(target_os = "linux")]
+const HULY_CEF_BINARY: &str = "huly-cef-websockets";
+#[cfg(target_os = "macos")]
+const HULY_CEF_BINARY_MACOS: &str = "huly-cef-websockets.app";
+#[cfg(target_os = "windows")]
+const HULY_CEF_BINARY_WINDOWS: &str = "huly-cef-websockets.exe";
+
 use tauri::Manager;
 
 struct CefProcess {
@@ -18,14 +25,22 @@ impl CefProcess {
     }
 
     fn start(&self, path: PathBuf) {
-        let mut process = self.inner.lock().unwrap();
-        *process = Some(
+        let cef_process = if cfg!(target_os = "macos") {
+            Command::new("open")
+                .arg(path)
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+        } else {
             Command::new(path)
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .spawn()
-                .expect("Failed to start huly-cef"),
-        );
+        }
+        .expect("failed to start huly-cef");
+
+        let mut lock = self.inner.lock().unwrap();
+        *lock = Some(cef_process);
     }
 
     fn clone(&self) -> Self {
@@ -54,7 +69,7 @@ pub fn run() {
                 .path()
                 .resource_dir()
                 .expect("Failed to get resource dir")
-                .join("cef/huly-cef-websockets");
+                .join(format!("cef/{HULY_CEF_BINARY}"));
 
             if !huly_cef_path.exists() {
                 println!("cef not found");
