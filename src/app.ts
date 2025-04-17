@@ -59,9 +59,27 @@ export class App {
     }
 
     setActiveTab(tabId: BrowserId) {
+        let activeTab = this.getActiveTab();
+        if (activeTab) {
+            let cefClient = this.cefClients.get(activeTab.id);
+            if (cefClient) {
+                cefClient.stopVideo();
+            }
+        }
+
         let index = this.tabs.findIndex((tab) => tab.id === tabId);
         if (index !== -1) {
             this.setActiveTabIndex(index);
+        }
+    }
+
+    resizeActiveTab(width: number, height: number) {
+        let activeTab = this.getActiveTab();
+        if (activeTab) {
+            let cefClient = this.cefClients.get(activeTab.id);
+            if (cefClient) {
+                cefClient.onResize(width, height);
+            }
         }
     }
 

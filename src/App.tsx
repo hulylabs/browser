@@ -5,9 +5,12 @@ import Input from "./components/sidebar/Input";
 import NewTabButton from "./components/sidebar/NewTabButton";
 import Tab from "./components/sidebar/Tab";
 import { App } from "./app";
+import hotkeys from "hotkeys-js";
 
 function AppComponent() {
   let app = new App();
+
+  hotkeys('ctrl+n', app.newTab);
 
   return (
     <div class="app">

@@ -26,12 +26,7 @@ function Browser(props: { app: App }) {
             canvas.height = rect.height;
             imageData = ctx.createImageData(rect.width, rect.height);
 
-            let activeTab = props.app.getActiveTab();
-            if (activeTab === undefined)
-                return console.log("failed to get active tab");
-
-            let cefClient = props.app.cefClients.get(activeTab.id)!;
-            cefClient.onResize(rect.width, rect.height);
+            props.app.resizeActiveTab(rect.width, rect.height);
 
         });
     });
