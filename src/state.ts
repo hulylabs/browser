@@ -4,7 +4,7 @@ import { createStore, SetStoreFunction } from "solid-js/store";
 
 type BrowserId = string;
 
-export interface TabModel {
+export interface TabState {
     id: BrowserId;
     title: string;
 
@@ -13,16 +13,16 @@ export interface TabModel {
     activate: () => void;
 }
 
-export class App {
+export class AppState {
     cefClients: Map<BrowserId, CEFClient>;
-    tabs: TabModel[];
-    setTabs: SetStoreFunction<TabModel[]>;
+    tabs: TabState[];
+    setTabs: SetStoreFunction<TabState[]>;
 
     activeTabIndex: Accessor<number>;
     setActiveTabIndex: Setter<number>;
 
     constructor() {
-        [this.tabs, this.setTabs] = createStore<TabModel[]>([]);
+        [this.tabs, this.setTabs] = createStore<TabState[]>([]);
         [this.activeTabIndex, this.setActiveTabIndex] = createSignal<number>(-1);
         this.cefClients = new Map();
     }
@@ -32,7 +32,7 @@ export class App {
 
         ws.onopen = () => {
             let cefClient = new CEFClient(ws);
-            let tab: TabModel = {
+            let tab: TabState = {
                 id: createUniqueId(),
                 title: "New Tab",
 
@@ -54,7 +54,7 @@ export class App {
         }
     }
 
-    getActiveTab(): TabModel | undefined {
+    getActiveTab(): TabState | undefined {
         return this.tabs[this.activeTabIndex()];
     }
 

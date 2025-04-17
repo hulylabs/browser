@@ -1,8 +1,8 @@
 import { createSignal } from "solid-js";
-import { App } from "../../app";
+import { AppState } from "../../state";
 import "./Input.css";
 
-export default function Input(props: { app: App }) {
+export default function Input(props: { app: AppState }) {
     let [input, setInput] = createSignal<string>("");
 
     let onKeyDown = (e: KeyboardEvent) => {

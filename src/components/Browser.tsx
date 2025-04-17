@@ -1,8 +1,8 @@
 import { createEffect, onMount } from "solid-js";
-import { App } from "../app";
+import { AppState } from "../state";
 import "./Browser.css";
 
-function Browser(props: { app: App }) {
+function Browser(props: { app: AppState }) {
     let canvasContainer!: HTMLDivElement;
     let canvas!: HTMLCanvasElement;
     let imageData!: ImageData;
