@@ -1,8 +1,11 @@
 use std::{
-    path::PathBuf,
+    fs, io,
+    path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::{Arc, Mutex},
 };
+
+use tauri::Manager;
 
 #[cfg(target_os = "linux")]
 const HULY_CEF_BINARY: &str = "huly-cef-websockets";
@@ -11,7 +14,19 @@ const HULY_CEF_BINARY_MACOS: &str = "huly-cef-websockets.app";
 #[cfg(target_os = "windows")]
 const HULY_CEF_BINARY_WINDOWS: &str = "huly-cef-websockets.exe";
 
-use tauri::Manager;
+fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+    fs::create_dir_all(&dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
 
 struct CefProcess {
     inner: Arc<Mutex<Option<Child>>>,
@@ -28,13 +43,13 @@ impl CefProcess {
         let cef_process = if cfg!(target_os = "macos") {
             Command::new("open")
                 .arg(path)
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
                 .spawn()
         } else {
             Command::new(path)
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
                 .spawn()
         }
         .expect("failed to start huly-cef");
@@ -65,17 +80,24 @@ pub fn run() {
 
     tauri::Builder::default()
         .setup(move |app| {
-            let huly_cef_path = app
+            let mut huly_cef_path = app
                 .path()
                 .resource_dir()
                 .expect("Failed to get resource dir")
                 .join(format!("cef/{HULY_CEF_BINARY}"));
 
             if !huly_cef_path.exists() {
-                println!("cef not found");
-            } else {
-                cef.start(huly_cef_path);
+                println!("huly-cef-websockets not found");
+                return Ok(());
             }
+
+            if cfg!(target_os = "macos") {
+                let huly_cef_tmp = PathBuf::from("/tmp/huly-cef-websockets.app");
+                copy_dir_all(&huly_cef_path, &huly_cef_tmp)?;
+                huly_cef_path = huly_cef_tmp;
+            }
+
+            cef.start(huly_cef_path);
 
             Ok(())
         })
