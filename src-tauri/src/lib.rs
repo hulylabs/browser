@@ -10,9 +10,9 @@ use tauri::Manager;
 #[cfg(target_os = "linux")]
 const HULY_CEF_BINARY: &str = "huly-cef-websockets";
 #[cfg(target_os = "macos")]
-const HULY_CEF_BINARY_MACOS: &str = "huly-cef-websockets.app";
+const HULY_CEF_BINARY: &str = "huly-cef-websockets.app";
 #[cfg(target_os = "windows")]
-const HULY_CEF_BINARY_WINDOWS: &str = "huly-cef-websockets.exe";
+const HULY_CEF_BINARY: &str = "huly-cef-websockets.exe";
 
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
     fs::create_dir_all(&dst)?;
@@ -40,19 +40,11 @@ impl CefProcess {
     }
 
     fn start(&self, path: PathBuf) {
-        let cef_process = if cfg!(target_os = "macos") {
-            Command::new("open")
-                .arg(path)
+        let cef_process = Command::new(path)
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
                 .spawn()
-        } else {
-            Command::new(path)
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .spawn()
-        }
-        .expect("failed to start huly-cef");
+                .expect("failed to start huly-cef");
 
         let mut lock = self.inner.lock().unwrap();
         *lock = Some(cef_process);
@@ -67,8 +59,7 @@ impl CefProcess {
     fn kill(&self) {
         let mut process = self.inner.lock().unwrap();
         if let Some(ref mut child) = *process {
-            child.kill().expect("Failed to kill huly-cef");
-            *process = None;
+            child.kill().expect("failed to kill huly-cef");
         }
     }
 }
@@ -83,7 +74,7 @@ pub fn run() {
             let mut huly_cef_path = app
                 .path()
                 .resource_dir()
-                .expect("Failed to get resource dir")
+                .expect("failed to get resource dir")
                 .join(format!("cef/{HULY_CEF_BINARY}"));
 
             if !huly_cef_path.exists() {
@@ -94,7 +85,7 @@ pub fn run() {
             if cfg!(target_os = "macos") {
                 let huly_cef_tmp = PathBuf::from("/tmp/huly-cef-websockets.app");
                 copy_dir_all(&huly_cef_path, &huly_cef_tmp)?;
-                huly_cef_path = huly_cef_tmp;
+                huly_cef_path = huly_cef_tmp.join("Contents/MacOS/huly-cef-websockets");
             }
 
             cef.start(huly_cef_path);
