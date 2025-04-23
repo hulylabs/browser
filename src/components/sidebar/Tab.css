@@ -1,18 +1,15 @@
 .tab {
-    margin: 5px 5px;
-    padding: 10px 8px;
-    border-radius: 5px;
     display: flex;
-    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
 
-    font-size: 14px;
+    margin: 5px;
+    padding: 5px 8px;
+    border-radius: 5px;
 }
 
-.icon {
-    width: 16px;
-    height: 16px;
-    background-color: rgb(172, 204, 176);
-    border-radius: 5px;
+.active {
+    background-color: white;
 }
 
 .tab:hover:not(.active) {
@@ -20,7 +17,36 @@
     cursor: pointer;
 }
 
-.active {
-    background-color: white;
-    box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
+.tab-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    font-size: 14px;
+    text-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: '...';
+}
+
+.favicon {
+    min-width: 16px;
+    min-height: 16px;
+    border-radius: 5px;
+    background-color: rgb(172, 204, 176);
+}
+
+.close {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    visibility: hidden;
+}
+
+.tab:hover .close {
+    visibility: visible;
+}
+
+.close:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
 }

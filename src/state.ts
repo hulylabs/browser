@@ -2,19 +2,25 @@ import { CEFClient } from "cef-client";
 import { Accessor, createSignal, createUniqueId, Setter } from "solid-js";
 import { createStore, SetStoreFunction } from "solid-js/store";
 
-type BrowserId = string;
+type TabId = string;
 
 export interface TabState {
-    id: BrowserId;
+    id: TabId;
     title: string;
+    canGoBack: boolean;
+    canGoForward: boolean;
 
     goto: (url: string) => void;
     active: () => boolean;
     activate: () => void;
+    close: () => void;
+    goBack: () => void;
+    goForward: () => void;
+    reload: () => void;
 }
 
 export class AppState {
-    cefClients: Map<BrowserId, CEFClient>;
+    cefClients: Map<TabId, CEFClient>;
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
 
@@ -38,10 +44,11 @@ export class AppState {
 
                 goto: (url: string) => cefClient.goTo(url),
                 active: () => this.getActiveTab() ? tab.id === this.getActiveTab()!.id : false,
-                activate: () => {
-                    this.setActiveTab(tab.id);
-                    cefClient.startVideo();
-                }
+                activate: () => (this.setActiveTab(tab.id), cefClient.startVideo()),
+                close: () => this.closeTab(tab.id),
+                goBack: () => cefClient.goBack(),
+                goForward: () => cefClient.goForward(),
+                reload: () => cefClient.reload(),
             };
 
             cefClient.onTitleChanged = (title: string) => {
@@ -58,7 +65,7 @@ export class AppState {
         return this.tabs[this.activeTabIndex()];
     }
 
-    setActiveTab(tabId: BrowserId) {
+    setActiveTab(tabId: TabId) {
         let activeTab = this.getActiveTab();
         if (activeTab) {
             let cefClient = this.cefClients.get(activeTab.id);
@@ -67,6 +74,8 @@ export class AppState {
             }
         }
 
+
+        // TODO: add cefClient.startVideo()
         let index = this.tabs.findIndex((tab) => tab.id === tabId);
         if (index !== -1) {
             this.setActiveTabIndex(index);
@@ -83,10 +92,26 @@ export class AppState {
         }
     }
 
-    goto(browserId: BrowserId, url: string) {
-        let cefClient = this.cefClients.get(browserId);
+    goto(TabId: TabId, url: string) {
+        let cefClient = this.cefClients.get(TabId);
         if (cefClient) {
             cefClient.goTo(url);
+        }
+    }
+
+    closeTab(TabId: TabId) {
+        let index = this.tabs.findIndex((tab) => tab.id === TabId);
+
+        console.log(`Closing tab ${TabId} at index ${index}`);
+
+        this.setTabs(tabs => tabs.filter(tab => tab.id !== TabId));
+        this.cefClients.get(TabId)?.close();
+        this.cefClients.delete(TabId);
+
+        if (index == this.activeTabIndex()) {
+            this.setActiveTabIndex(index - 1 < 0 ? 0 : index - 1);
+        } else if (index < this.activeTabIndex()) {
+            this.setActiveTabIndex(this.activeTabIndex() - 1);
         }
     }
 }

@@ -1,0 +1,27 @@
+.tabСontrols {
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    gap: 6px;
+
+    padding: 10px;
+
+    color: grey;
+}
+
+.button {
+    width: 28px;
+    height: 28px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.active {
+    color: black;
+}
+
+/* only if active */
+.button.active:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}

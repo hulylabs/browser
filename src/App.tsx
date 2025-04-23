@@ -5,6 +5,7 @@ import Input from "./components/sidebar/Input";
 import NewTabButton from "./components/sidebar/NewTabButton";
 import Tab from "./components/sidebar/Tab";
 import "./App.css";
+import TabControls from "./components/sidebar/TabControls";
 
 function AppComponent() {
   let app = new AppState();
@@ -12,6 +13,7 @@ function AppComponent() {
   return (
     <div class="app">
       <div class="sidebar">
+        <TabControls app={app} />
         <Input app={app} />
         <NewTabButton onClick={() => app.newTab()} />
         <For each={app.tabs}>{(tab) => (
