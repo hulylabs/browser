@@ -9,7 +9,7 @@ export default function Input(props: { app: AppState }) {
         if (e.key === "Enter") {
             e.preventDefault();
             let url = input();
-            props.app.getActiveTab().goto(url);
+            props.app.getActiveTab()?.goTo(url);
         }
     }
 

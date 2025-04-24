@@ -47,7 +47,7 @@ function Browser(props: { app: AppState }) {
             ctx.putImageData(imageData, 0, 0);
         };
 
-        cefClient.onResize(canvas.width, canvas.height);
+        cefClient.resize(canvas.width, canvas.height);
 
         canvas.onmousemove = function (e) {
             cefClient.onMouseMove(e.offsetX, e.offsetY);

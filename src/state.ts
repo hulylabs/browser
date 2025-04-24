@@ -10,7 +10,7 @@ export interface TabState {
     canGoBack: boolean;
     canGoForward: boolean;
 
-    goto: (url: string) => void;
+    goTo: (url: string) => void;
     active: () => boolean;
     activate: () => void;
     close: () => void;
@@ -37,25 +37,29 @@ export class AppState {
         let ws = new WebSocket("ws://localhost:8080/");
 
         ws.onopen = () => {
-            let cefClient = new CEFClient(ws);
-            let tab: TabState = {
-                id: createUniqueId(),
-                title: "New Tab",
+            let id = createUniqueId();
+            this.cefClients.set(id, new CEFClient(ws));
 
-                goto: (url: string) => cefClient.goTo(url),
-                active: () => this.getActiveTab() ? tab.id === this.getActiveTab()!.id : false,
-                activate: () => (this.setActiveTab(tab.id), cefClient.startVideo()),
-                close: () => this.closeTab(tab.id),
-                goBack: () => cefClient.goBack(),
-                goForward: () => cefClient.goForward(),
-                reload: () => cefClient.reload(),
-            };
-
-            cefClient.onTitleChanged = (title: string) => {
+            this.cefClients.get(id)!.onTitleChanged = (title: string) => {
                 this.setTabs((tabs) => tabs.id == tab.id, "title", title);
             }
 
-            this.cefClients.set(tab.id, cefClient);
+            let tab: TabState = {
+                id: id,
+                title: "New Tab",
+                canGoBack: true,
+                canGoForward: true,
+
+                goTo: (url: string) => this.goTo(id, url),
+                active: () => this.getActiveTab() ? tab.id === this.getActiveTab()!.id : false,
+                activate: () => this.setActiveTab(tab.id),
+                close: () => this.closeTab(tab.id),
+                goBack: () => this.goBack(id),
+                goForward: () => this.goForward(id),
+                reload: () => this.reload(id),
+            };
+
+
             this.setTabs((prev) => [...prev, tab]);
             this.setActiveTabIndex(this.tabs.length - 1);
         }
@@ -74,10 +78,9 @@ export class AppState {
             }
         }
 
-
-        // TODO: add cefClient.startVideo()
         let index = this.tabs.findIndex((tab) => tab.id === tabId);
         if (index !== -1) {
+            this.cefClients.get(tabId)!.startVideo();
             this.setActiveTabIndex(index);
         }
     }
@@ -85,28 +88,32 @@ export class AppState {
     resizeActiveTab(width: number, height: number) {
         let activeTab = this.getActiveTab();
         if (activeTab) {
-            let cefClient = this.cefClients.get(activeTab.id);
-            if (cefClient) {
-                cefClient.onResize(width, height);
-            }
+            this.cefClients.get(activeTab.id)!.resize(width, height);
         }
     }
 
-    goto(TabId: TabId, url: string) {
-        let cefClient = this.cefClients.get(TabId);
-        if (cefClient) {
-            cefClient.goTo(url);
-        }
+    goTo(tabId: TabId, url: string) {
+        this.cefClients.get(tabId)!.goTo(url);
     }
 
-    closeTab(TabId: TabId) {
-        let index = this.tabs.findIndex((tab) => tab.id === TabId);
+    goBack(tabId: TabId) {
+        this.cefClients.get(tabId)!.goBack();
+    }
 
-        console.log(`Closing tab ${TabId} at index ${index}`);
+    goForward(tabId: TabId) {
+        this.cefClients.get(tabId)!.goForward();
+    }
 
-        this.setTabs(tabs => tabs.filter(tab => tab.id !== TabId));
-        this.cefClients.get(TabId)?.close();
-        this.cefClients.delete(TabId);
+    reload(tabId: TabId) {
+        this.cefClients.get(tabId)!.reload();
+    }
+
+    closeTab(tabId: TabId) {
+        let index = this.tabs.findIndex((tab) => tab.id === tabId);
+
+        this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
+        this.cefClients.get(tabId)!.close();
+        this.cefClients.delete(tabId);
 
         if (index == this.activeTabIndex()) {
             this.setActiveTabIndex(index - 1 < 0 ? 0 : index - 1);
