@@ -16,7 +16,7 @@ interface IconProps {
     icon: string;
     class?: string;
     classList?: { [key: string]: boolean | undefined };
-    onClick?: () => void;
+    onClick?: (e: MouseEvent) => void;
 }
 
 export function Icon(props: IconProps) {
