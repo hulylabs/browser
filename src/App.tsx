@@ -16,10 +16,12 @@ function AppComponent() {
         <TabControls app={app} />
         <Input app={app} />
         <NewTabButton onClick={() => app.newTab()} />
-        <For each={app.tabs}>{(tab) => (
-          <Tab tab={tab} />
-        )}
-        </For>
+        <div class="tabs">
+          <For each={app.tabs}>{(tab) => (
+            <Tab tab={tab} />
+          )}
+          </For>
+        </div>
       </div>
 
       <div class="browser">

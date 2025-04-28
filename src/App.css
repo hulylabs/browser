@@ -27,6 +27,14 @@ body,
   flex-direction: column;
 }
 
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  overflow: auto;
+}
+
 .browser {
   width: 100%;
   margin: 8px;
