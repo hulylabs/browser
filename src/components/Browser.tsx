@@ -1,4 +1,4 @@
-import { createEffect, onMount } from "solid-js";
+import { createEffect, onCleanup, onMount } from "solid-js";
 import { AppState } from "../state";
 import "./Browser.css";
 
@@ -6,6 +6,9 @@ function Browser(props: { app: AppState }) {
     let canvasContainer!: HTMLDivElement;
     let canvas!: HTMLCanvasElement;
     let imageData!: ImageData;
+
+    let resizeObserver!: ResizeObserver;
+    let timeoutId: number = 0;
 
     onMount(() => {
         let ctx = canvas.getContext("2d");
@@ -19,16 +22,23 @@ function Browser(props: { app: AppState }) {
         canvas.height = rect.height;
         imageData = ctx.createImageData(rect.width, rect.height);
 
-        window.addEventListener("resize", () => {
-            const rect = canvasContainer.getBoundingClientRect();
-
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            imageData = ctx.createImageData(rect.width, rect.height);
-
-            props.app.resizeActiveTab(rect.width, rect.height);
-
+        resizeObserver = new ResizeObserver(() => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                const rect = canvasContainer.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+                imageData = ctx.createImageData(rect.width, rect.height);
+                props.app.resizeActiveTab(rect.width, rect.height);
+            }, 100);
         });
+
+        resizeObserver.observe(canvasContainer);
+    });
+
+    onCleanup(() => {
+        resizeObserver?.disconnect();
+        clearTimeout(timeoutId);
     });
 
     createEffect(() => {
