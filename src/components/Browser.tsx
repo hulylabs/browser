@@ -42,6 +42,8 @@ function Browser(props: { app: AppState }) {
 
         let cefClient = props.app.cefClients.get(activeTab.id)!;
 
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         cefClient.onRender = (data) => {
             imageData.data.set(data);
             ctx.putImageData(imageData, 0, 0);

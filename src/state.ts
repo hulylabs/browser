@@ -35,6 +35,9 @@ export class AppState {
         this.cefClients.get(id)!.onTitleChanged = (title: string) => {
             this.setTabs((tab) => id == tab.id, "title", title);
         }
+        this.cefClients.get(id)!.onNewTabRequested = (url: string) => {
+            this.newTab(url);
+        }
 
         let tab: TabState = {
             id: id,
@@ -52,7 +55,7 @@ export class AppState {
         };
 
         if (url) {
-            tab.goTo(url);
+            this.goTo(id, url);
         }
 
         this.setTabs((prev) => [...prev, tab]);
