@@ -7,6 +7,7 @@ type TabId = string;
 export interface TabState {
     id: TabId;
     title: string;
+    faviconUrl: string;
     active: boolean;
     canGoBack: boolean;
     canGoForward: boolean;
@@ -38,10 +39,14 @@ export class AppState {
         this.cefClients.get(id)!.onNewTabRequested = (url: string) => {
             this.newTab(url);
         }
+        this.cefClients.get(id)!.onFaviconUrlChanged = (faviconUrl: string) => {
+            this.setTabs((tab) => id == tab.id, "faviconUrl", faviconUrl);
+        }
 
         let tab: TabState = {
             id: id,
             title: "New Tab",
+            faviconUrl: "",
             active: false,
             canGoBack: true,
             canGoForward: true,

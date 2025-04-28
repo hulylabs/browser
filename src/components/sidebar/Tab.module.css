@@ -17,7 +17,7 @@
     cursor: pointer;
 }
 
-.tab-info {
+.tabInfo {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -29,10 +29,18 @@
 }
 
 .favicon {
-    min-width: 16px;
-    min-height: 16px;
+    width: 16px;
+    height: 16px;
     border-radius: 5px;
-    background-color: rgb(172, 204, 176);
+}
+
+.empty {
+    background-color: rgb(255, 194, 154);
+}
+
+.favicon img {
+    width: 100%;
+    height: 100%;
 }
 
 .close {
