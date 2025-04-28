@@ -1,10 +1,11 @@
-import classes from "./TabControls.module.scss";
+import classes from "./TabControls.module.css";
 
 import { AppState } from "../../state";
 import { Icon, Icons } from "../Icon";
+import { createMemo } from "solid-js";
 
 export default function TabControls(props: { app: AppState }) {
-    const activeTab = () => props.app.getActiveTab();
+    const activeTab = createMemo(() => props.app.getActiveTab());
 
     return (
         <div class={classes.tabСontrols}>

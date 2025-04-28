@@ -1,15 +1,22 @@
-import { createSignal } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 import { AppState } from "../../state";
 import "./Input.css";
 
 export default function Input(props: { app: AppState }) {
     let [input, setInput] = createSignal<string>("");
 
+    let activeTabMemo = createMemo(() => props.app.getActiveTab());
+
     let onKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Enter") {
             e.preventDefault();
             let url = input();
-            props.app.getActiveTab()?.goTo(url);
+
+            let activeTab = activeTabMemo();
+            if (activeTab)
+                activeTab.goTo(url);
+            else
+                props.app.newTab(url);
         }
     }
 
