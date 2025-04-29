@@ -1,6 +1,7 @@
 import { CEFClient } from "cef-client";
 import { createUniqueId } from "solid-js";
 import { createStore, SetStoreFunction } from "solid-js/store";
+import { BrowserPlugin } from "./plugins/plugin";
 
 type TabId = string;
 
@@ -25,9 +26,17 @@ export class AppState {
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
 
+    plugins: BrowserPlugin[];
+
     constructor() {
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
         this.cefClients = new Map();
+        this.plugins = [];
+    }
+
+    addPlugin(plugin: BrowserPlugin) {
+        plugin.setup(this);
+        this.plugins.push(plugin);
     }
 
     newTab(url?: string) {

@@ -6,9 +6,11 @@ import NewTabButton from "./components/sidebar/NewTabButton";
 import Tab from "./components/sidebar/Tab";
 import "./App.css";
 import TabControls from "./components/sidebar/TabControls";
+import { ShortcutPlugin } from "./plugins/shortcuts/shortcut";
 
-function AppComponent() {
+function App() {
   let app = new AppState();
+  app.addPlugin(new ShortcutPlugin());
 
   return (
     <div class="app">
@@ -31,4 +33,4 @@ function AppComponent() {
   )
 }
 
-export default AppComponent;
+export default App;
