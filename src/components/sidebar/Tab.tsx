@@ -1,4 +1,4 @@
-import styles from "./Tab.module.css";
+import styles from "./Tab.module.scss";
 
 import { TabState } from "../../state";
 import { Icon, Icons } from "../Icon";
@@ -23,7 +23,7 @@ export default function Tab(props: { tab: TabState }) {
                     </div>
                 </Show>
 
-                <p>{props.tab.title}</p>
+                <p class={styles.tabTitle}>{props.tab.title}</p>
 
             </div>
 

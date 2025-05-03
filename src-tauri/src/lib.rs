@@ -1,8 +1,9 @@
 use std::{
     fs, io,
-    path::{Path, PathBuf},
+    net::TcpListener,
+    path::Path,
     process::{Child, Command, Stdio},
-    sync::{Arc, Mutex},
+    sync::Mutex,
 };
 
 use tauri::Manager;
@@ -10,7 +11,7 @@ use tauri::Manager;
 #[cfg(target_os = "linux")]
 const HULY_CEF_BINARY: &str = "huly-cef-websockets";
 #[cfg(target_os = "macos")]
-const HULY_CEF_BINARY: &str = "huly-cef-websockets.app";
+const HULY_CEF_BINARY: &str = "huly-cef-websockets.app/Contents/MacOS/huly-cef-websockets";
 #[cfg(target_os = "windows")]
 const HULY_CEF_BINARY: &str = "huly-cef-websockets.exe";
 
@@ -28,73 +29,59 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> 
     Ok(())
 }
 
-struct CefProcess {
-    inner: Arc<Mutex<Option<Child>>>,
+fn find_available_port() -> u16 {
+    let listener = TcpListener::bind("127.0.0.0:0").expect("failed to find available port");
+    return listener.local_addr().unwrap().port();
 }
 
-impl CefProcess {
-    fn new() -> Self {
-        Self {
-            inner: Arc::new(Mutex::new(None)),
-        }
-    }
+#[derive(Default)]
+struct BrowserState {
+    pub cef_processes: Vec<Child>,
+}
 
-    fn start(&self, path: PathBuf) {
-        let cef_process = Command::new(path)
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .spawn()
-                .expect("failed to start huly-cef");
+#[tauri::command]
+fn launch_cef_command(app_handle: tauri::AppHandle) -> u16 {
+    let port = find_available_port();
 
-        let mut lock = self.inner.lock().unwrap();
-        *lock = Some(cef_process);
-    }
+    let cef_dir = app_handle
+        .path()
+        .resource_dir()
+        .expect("failed to get resource dir")
+        .join(format!("cef"));
 
-    fn clone(&self) -> Self {
-        Self {
-            inner: Arc::clone(&self.inner),
-        }
-    }
+    let tmp_cef_dir = std::env::temp_dir().join("huly-browser");
+    _ = copy_dir_all(&cef_dir, &tmp_cef_dir);
 
-    fn kill(&self) {
-        let mut process = self.inner.lock().unwrap();
-        if let Some(ref mut child) = *process {
-            child.kill().expect("failed to kill huly-cef");
-        }
-    }
+    let cef_process = Command::new(tmp_cef_dir.join(HULY_CEF_BINARY))
+        .args(["--port", port.to_string().as_str()])
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()
+        .expect("failed to start huly-cef");
+
+    let state = app_handle.state::<Mutex<BrowserState>>();
+    let mut state = state.lock().unwrap();
+    state.cef_processes.push(cef_process);
+
+    return port;
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let cef = CefProcess::new();
-    let cef_clone = cef.clone();
-
     tauri::Builder::default()
         .setup(move |app| {
-            let mut huly_cef_path = app
-                .path()
-                .resource_dir()
-                .expect("failed to get resource dir")
-                .join(format!("cef/{HULY_CEF_BINARY}"));
-
-            if !huly_cef_path.exists() {
-                println!("huly-cef-websockets not found");
-                return Ok(());
-            }
-
-            if cfg!(target_os = "macos") {
-                let huly_cef_tmp = PathBuf::from("/tmp/huly-cef-websockets.app");
-                copy_dir_all(&huly_cef_path, &huly_cef_tmp)?;
-                huly_cef_path = huly_cef_tmp.join("Contents/MacOS/huly-cef-websockets");
-            }
-
-            cef.start(huly_cef_path);
+            app.manage(Mutex::new(BrowserState::default()));
 
             Ok(())
         })
-        .on_window_event(move |_, event| {
+        .invoke_handler(tauri::generate_handler![launch_cef_command])
+        .on_window_event(move |window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                cef_clone.kill();
+                let state = window.app_handle().state::<Mutex<BrowserState>>();
+                let mut state = state.lock().unwrap();
+                for cef_process in state.cef_processes.iter_mut() {
+                    cef_process.kill().expect("failed to kill huly-cef");
+                }
             }
         })
         .plugin(tauri_plugin_opener::init())

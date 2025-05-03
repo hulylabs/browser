@@ -22,6 +22,8 @@ export interface TabState {
 }
 
 export class AppState {
+    cefPort: number = -1;
+
     cefClients: Map<TabId, CEFClient>;
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
@@ -39,9 +41,13 @@ export class AppState {
         this.plugins.push(plugin);
     }
 
+    setPort(port: number) {
+        this.cefPort = port;
+    }
+
     newTab(url?: string) {
         let id = createUniqueId();
-        this.cefClients.set(id, new CEFClient("ws://localhost:8080/"));
+        this.cefClients.set(id, new CEFClient("ws://localhost:" + this.cefPort + "/"));
         this.cefClients.get(id)!.onTitleChanged = (title: string) => {
             this.setTabs((tab) => id == tab.id, "title", title);
         }
