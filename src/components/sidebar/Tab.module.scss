@@ -65,7 +65,21 @@
     width: 16px;
     height: 16px;
     border-radius: 5px;
-    visibility: hidden;
+    display: none;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        display: block;
+    }
+}
+
+.close {
+    min-width: 16px;
+    min-height: 16px;
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
     display: none;
 
     &:hover {

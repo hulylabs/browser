@@ -14,14 +14,13 @@
     height: 28px;
     padding: 5px;
     border-radius: 5px;
-}
 
-.active {
-    color: black;
-}
+    &.active {
+        color: black;
 
-/* only if active */
-.button.active:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-    cursor: pointer;
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+    }
 }

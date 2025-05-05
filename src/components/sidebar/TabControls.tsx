@@ -1,4 +1,4 @@
-import styles from "./TabControls.module.css";
+import styles from "./TabControls.module.scss";
 
 import { AppState } from "../../state";
 import { Icon, Icons } from "../Icon";
