@@ -30,7 +30,7 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> 
 }
 
 fn find_available_port() -> u16 {
-    let listener = TcpListener::bind("127.0.0.0:0").expect("failed to find available port");
+    let listener = TcpListener::bind("127.0.0.1:0").expect("failed to find available port");
     return listener.local_addr().unwrap().port();
 }
 
