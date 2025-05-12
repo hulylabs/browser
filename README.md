@@ -1,7 +1,27 @@
-# Tauri + Solid + Typescript
+# Setting Up Huly CEF with Tauri
 
-This template should help get you started developing with Tauri, Solid and Typescript in Vite.
+Follow these steps to configure and launch the Huly CEF browser using Tauri.
 
-## Recommended IDE Setup
+## 1. Define the Environment Variable for Huly CEF
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+Set the environment variable `HULY_CEF` to point to your local Huly CEF repository. This will copy the necessary Huly CEF binaries into the Tauri resources folder.
+
+```bash
+export HULY_CEF=/path/to/huly/cef
+```
+
+## 2. Install Node Modules
+
+Use npm to install the required dependencies.
+
+```bash
+npm install
+```
+
+## 3. Launch the Tauri App
+
+Start the Tauri development environment to launch the browser.
+
+```bash
+npm run tauri dev
+```

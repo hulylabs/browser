@@ -12,9 +12,8 @@ import { invoke } from "@tauri-apps/api/core";
 function App() {
   let app = new AppState();
   app.addPlugin(new ShortcutPlugin());
-  app.setPort(8080);
 
-  //invoke("launch_cef_command").then((value) => app.setPort(value as number));
+  invoke("launch_cef_command").then((value) => app.setPort(value as number));
 
   return (
     <div class="app">
