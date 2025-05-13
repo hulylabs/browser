@@ -1,3 +1,4 @@
+use std::env::current_dir;
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
@@ -24,10 +25,13 @@ fn main() {
             HULY_CEF
         );
     });
-    let huly_cef_path = PathBuf::from(huly_cef_path).join("target/release");
+    let mut huly_cef_path = PathBuf::from(huly_cef_path).join("target/release");
+    if huly_cef_path.is_relative() {
+        huly_cef_path = PathBuf::from("..").join(huly_cef_path)
+    }
 
-    copy_dir_all(huly_cef_path, "cef").unwrap_or_else(|_| {
-        panic!("Failed to copy huly cef artifacts");
+    copy_dir_all(huly_cef_path, "cef").unwrap_or_else(|e| {
+        panic!("Failed to copy huly cef artifacts: {}", e.kind());
     });
 
     tauri_build::build()
