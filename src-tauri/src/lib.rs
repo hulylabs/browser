@@ -9,7 +9,7 @@ use std::{
 use tauri::Manager;
 
 #[cfg(target_os = "linux")]
-const HULY_CEF_BINARY: &str = "huly-cef-websockets";
+const HULY_CEF_BINARY: &str = "linux-x86_64/huly-cef-websockets";
 #[cfg(target_os = "macos")]
 const HULY_CEF_BINARY: &str = "huly-cef-websockets.app/Contents/MacOS/huly-cef-websockets";
 #[cfg(target_os = "windows")]
