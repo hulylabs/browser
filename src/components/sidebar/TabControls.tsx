@@ -9,8 +9,8 @@ export default function TabControls(props: { app: AppState }) {
 
     return (
         <div class={styles.tabСontrols}>
-            <Icon icon={Icons.Back} class={styles.button} classList={{ [styles.active]: activeTab() != undefined }} onClick={() => activeTab()?.goBack()} />
-            <Icon icon={Icons.Forward} class={styles.button} classList={{ [styles.active]: activeTab() != undefined }} onClick={() => activeTab()?.goForward()} />
+            <Icon icon={Icons.Back} class={styles.button} classList={{ [styles.active]: activeTab() != undefined && activeTab()?.canGoBack }} onClick={() => activeTab()?.goBack()} />
+            <Icon icon={Icons.Forward} class={styles.button} classList={{ [styles.active]: activeTab() != undefined && activeTab()?.canGoForward }} onClick={() => activeTab()?.goForward()} />
             <Icon icon={Icons.Reload} class={styles.button} classList={{ [styles.active]: activeTab() != undefined }} onClick={() => activeTab()?.reload()} />
         </div >
     )

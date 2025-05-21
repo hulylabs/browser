@@ -1,7 +1,7 @@
-import { CEFClient } from "cef-client";
-import { createUniqueId } from "solid-js";
+import { CEFClient, LoadState } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
+import { createUniqueId } from "solid-js";
 
 type TabId = string;
 
@@ -57,14 +57,18 @@ export class AppState {
         this.cefClients.get(id)!.onFaviconUrlChanged = (faviconUrl: string) => {
             this.setTabs((tab) => id == tab.id, "faviconUrl", faviconUrl);
         }
+        this.cefClients.get(id)!.onLoadStateChanged = (state: LoadState) => {
+            this.setTabs((tab) => id == tab.id, "canGoBack", state.canGoBack);
+            this.setTabs((tab) => id == tab.id, "canGoForward", state.canGoForward);
+        }
 
         let tab: TabState = {
             id: id,
             title: "New Tab",
             faviconUrl: "",
             active: false,
-            canGoBack: true,
-            canGoForward: true,
+            canGoBack: false,
+            canGoForward: false,
 
             goTo: (url: string) => this.goTo(id, url),
             activate: () => this.setActiveTab(tab.id),
