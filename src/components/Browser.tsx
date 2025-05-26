@@ -1,125 +1,147 @@
 import { createEffect, onCleanup, onMount, createSignal } from "solid-js";
 import { AppState } from "../state";
 import "./Browser.css";
+import { domCodeToKeyCode } from "../keyboard/keycodes";
 
 function Browser(props: { app: AppState }) {
-    let canvasContainer!: HTMLDivElement;
-    let canvas!: HTMLCanvasElement;
-    let imageData!: ImageData;
+  let canvasContainer!: HTMLDivElement;
+  let canvas!: HTMLCanvasElement;
+  let imageData!: ImageData;
 
-    let popupImageData!: ImageData;
+  let popupImageData!: ImageData;
 
-    let resizeObserver!: ResizeObserver;
-    let timeoutId: number = 0;
+  let resizeObserver!: ResizeObserver;
+  let timeoutId: number = 0;
 
-    // Add FPS tracking state
-    const [fps, setFps] = createSignal(0);
-    let frameCount = 0;
-    let lastTime = performance.now();
+  // Add FPS tracking state
+  const [fps, setFps] = createSignal(0);
+  let frameCount = 0;
+  let lastTime = performance.now();
 
-    onMount(() => {
-        let ctx = canvas.getContext("2d");
+  onMount(() => {
+    let ctx = canvas.getContext("2d");
 
-        if (ctx == null)
-            return console.error("Failed to get canvas context");
+    if (ctx == null) return console.error("Failed to get canvas context");
 
+    const rect = canvasContainer.getBoundingClientRect();
+
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    imageData = ctx.createImageData(rect.width, rect.height);
+
+    resizeObserver = new ResizeObserver(() => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
         const rect = canvasContainer.getBoundingClientRect();
-
         canvas.width = rect.width;
         canvas.height = rect.height;
         imageData = ctx.createImageData(rect.width, rect.height);
-
-        resizeObserver = new ResizeObserver(() => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                const rect = canvasContainer.getBoundingClientRect();
-                canvas.width = rect.width;
-                canvas.height = rect.height;
-                imageData = ctx.createImageData(rect.width, rect.height);
-                props.app.resizeActiveTab(rect.width, rect.height);
-            }, 100);
-        });
-
-        resizeObserver.observe(canvasContainer);
+        props.app.resizeActiveTab(rect.width, rect.height);
+      }, 100);
     });
 
-    onCleanup(() => {
-        resizeObserver?.disconnect();
-        clearTimeout(timeoutId);
-    });
+    resizeObserver.observe(canvasContainer);
+  });
 
-    createEffect(() => {
-        let activeTab = props.app.getActiveTab();
-        if (activeTab === undefined)
-            return console.log("failed to get active tab");
+  onCleanup(() => {
+    resizeObserver?.disconnect();
+    clearTimeout(timeoutId);
+  });
 
-        let ctx = canvas.getContext("2d");
-        if (ctx == null)
-            return console.error("Failed to get canvas context");
+  createEffect(() => {
+    let activeTab = props.app.getActiveTab();
+    if (activeTab === undefined) return console.log("failed to get active tab");
 
-        let cefClient = props.app.cefClients.get(activeTab.id)!;
+    let ctx = canvas.getContext("2d");
+    if (ctx == null) return console.error("Failed to get canvas context");
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let cefClient = props.app.cefClients.get(activeTab.id)!;
 
-        cefClient.onRender = (data) => {
-            // Calculate FPS
-            frameCount++;
-            const now = performance.now();
-            const elapsed = now - lastTime;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            if (elapsed >= 1000) {
-                setFps(Math.round(frameCount * 1000 / elapsed));
-                frameCount = 0;
-                lastTime = now;
-            }
+    cefClient.onRender = (data) => {
+      // Calculate FPS
+      frameCount++;
+      const now = performance.now();
+      const elapsed = now - lastTime;
 
-            imageData.data.set(data);
-            ctx.putImageData(imageData, 0, 0);
-        };
+      if (elapsed >= 1000) {
+        setFps(Math.round((frameCount * 1000) / elapsed));
+        frameCount = 0;
+        lastTime = now;
+      }
 
-        cefClient.onPopupRender = (x, y, w, h, data) => {
-            if (popupImageData == null || popupImageData.width !== w || popupImageData.height !== h) {
-                popupImageData = ctx.createImageData(w, h);
-            }
-            popupImageData.data.set(data);
-            ctx.putImageData(popupImageData, x, y);
-        }
+      imageData.data.set(data);
+      ctx.putImageData(imageData, 0, 0);
+    };
 
-        cefClient.resize(canvas.width, canvas.height);
+    cefClient.onPopupRender = (x, y, w, h, data) => {
+      if (
+        popupImageData == null ||
+        popupImageData.width !== w ||
+        popupImageData.height !== h
+      ) {
+        popupImageData = ctx.createImageData(w, h);
+      }
+      popupImageData.data.set(data);
+      ctx.putImageData(popupImageData, x, y);
+    };
 
-        canvas.onmousemove = function (e) {
-            cefClient.onMouseMove(e.offsetX, e.offsetY);
-        };
+    cefClient.resize(canvas.width, canvas.height);
 
-        canvas.onmousedown = function (e) {
-            cefClient.onMouseDown(e.offsetX, e.offsetY, e.button);
-        };
+    canvas.onmousemove = function (e) {
+      cefClient.onMouseMove(e.offsetX, e.offsetY);
+    };
 
-        canvas.onmouseup = function (e) {
-            cefClient.onMouseUp(e.offsetX, e.offsetY, e.button);
-        };
+    canvas.onmousedown = function (e) {
+      cefClient.onMouseDown(e.offsetX, e.offsetY, e.button);
+    };
 
-        canvas.onwheel = function (e) {
-            cefClient.onMouseWheel(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
-        };
+    canvas.onmouseup = function (e) {
+      cefClient.onMouseUp(e.offsetX, e.offsetY, e.button);
+    };
 
-        cefClient.onCursorChanged = (cursor) => {
-            if (cursor === "Hand") {
-                canvas.style.cursor = "pointer";
-            }
+    canvas.onwheel = function (e) {
+      cefClient.onMouseWheel(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
+    };
 
-            if (cursor === "Pointer") {
-                canvas.style.cursor = "default";
-            }
-        };
-    });
+    canvas.onkeydown = function (e) {
+      let character = 0;
+      if (e.key.length === 1) {
+        character = e.key.charCodeAt(0);
+      }
+      let keycode = domCodeToKeyCode(e.code);
+      cefClient.onKeyPress(keycode, character, true, e.ctrlKey, e.shiftKey);
+    };
 
-    return <>
-        <div class="canvas-container" ref={canvasContainer}>
-            <div class="fps-counter">{fps()} FPS</div>
-            <canvas class="canvas" ref={canvas}></canvas>
-        </div>
+    canvas.onkeyup = function (e) {
+      let character = 0;
+      if (e.key.length === 1) {
+        character = e.key.charCodeAt(0);
+      }
+      let keycode = domCodeToKeyCode(e.code);
+      cefClient.onKeyPress(keycode, character, false, e.ctrlKey, e.shiftKey);
+    };
+
+    cefClient.onCursorChanged = (cursor) => {
+      if (cursor === "Hand") {
+        canvas.style.cursor = "pointer";
+      }
+
+      if (cursor === "Pointer") {
+        canvas.style.cursor = "default";
+      }
+    };
+  });
+
+  return (
+    <>
+      <div class="canvas-container" ref={canvasContainer}>
+        <div class="fps-counter">{fps()} FPS</div>
+        <canvas tabIndex="0" class="canvas" ref={canvas}></canvas>
+      </div>
     </>
+  );
 }
 
 export default Browser;
