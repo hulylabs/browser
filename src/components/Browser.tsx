@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, onMount } from "solid-js";
+import { createEffect, onCleanup, onMount, createSignal } from "solid-js";
 import { AppState } from "../state";
 import "./Browser.css";
 
@@ -7,8 +7,15 @@ function Browser(props: { app: AppState }) {
     let canvas!: HTMLCanvasElement;
     let imageData!: ImageData;
 
+    let popupImageData!: ImageData;
+
     let resizeObserver!: ResizeObserver;
     let timeoutId: number = 0;
+
+    // Add FPS tracking state
+    const [fps, setFps] = createSignal(0);
+    let frameCount = 0;
+    let lastTime = performance.now();
 
     onMount(() => {
         let ctx = canvas.getContext("2d");
@@ -55,9 +62,28 @@ function Browser(props: { app: AppState }) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         cefClient.onRender = (data) => {
+            // Calculate FPS
+            frameCount++;
+            const now = performance.now();
+            const elapsed = now - lastTime;
+
+            if (elapsed >= 1000) {
+                setFps(Math.round(frameCount * 1000 / elapsed));
+                frameCount = 0;
+                lastTime = now;
+            }
+
             imageData.data.set(data);
             ctx.putImageData(imageData, 0, 0);
         };
+
+        cefClient.onPopupRender = (x, y, w, h, data) => {
+            if (popupImageData == null || popupImageData.width !== w || popupImageData.height !== h) {
+                popupImageData = ctx.createImageData(w, h);
+            }
+            popupImageData.data.set(data);
+            ctx.putImageData(popupImageData, x, y);
+        }
 
         cefClient.resize(canvas.width, canvas.height);
 
@@ -90,6 +116,7 @@ function Browser(props: { app: AppState }) {
 
     return <>
         <div class="canvas-container" ref={canvasContainer}>
+            <div class="fps-counter">{fps()} FPS</div>
             <canvas class="canvas" ref={canvas}></canvas>
         </div>
     </>
