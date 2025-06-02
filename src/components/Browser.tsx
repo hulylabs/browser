@@ -55,10 +55,9 @@ function Browser(props: { app: AppState }) {
     let ctx = canvas.getContext("2d");
     if (ctx == null) return console.error("Failed to get canvas context");
 
-    let cefClient = props.app.cefClients.get(activeTab.id)!;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    let cefClient = props.app.cefClients.get(activeTab.id)!;
     cefClient.onRender = (data) => {
       // Calculate FPS
       frameCount++;
@@ -85,6 +84,17 @@ function Browser(props: { app: AppState }) {
       }
       popupImageData.data.set(data);
       ctx.putImageData(popupImageData, x, y);
+    };
+
+
+    cefClient.onCursorChanged = (cursor) => {
+      if (cursor === "Hand") {
+        canvas.style.cursor = "pointer";
+      }
+
+      if (cursor === "Pointer") {
+        canvas.style.cursor = "default";
+      }
     };
 
     cefClient.resize(canvas.width, canvas.height);
@@ -123,15 +133,16 @@ function Browser(props: { app: AppState }) {
       cefClient.onKeyPress(keycode, character, false, e.ctrlKey, e.shiftKey);
     };
 
-    cefClient.onCursorChanged = (cursor) => {
-      if (cursor === "Hand") {
-        canvas.style.cursor = "pointer";
-      }
-
-      if (cursor === "Pointer") {
-        canvas.style.cursor = "default";
-      }
+    canvas.onfocus = () => {
+      console.log("canvas focused");
+      cefClient.setFocus(true);
     };
+
+    canvas.onblur = () => {
+      console.log("canvas blurred");
+      cefClient.setFocus(false);
+    };
+
   });
 
   return (
