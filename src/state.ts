@@ -1,9 +1,9 @@
-import { CEFClient, LoadState } from "cef-client";
+import { BrowserClient, CEFClient, LoadState } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
-import { createUniqueId } from "solid-js";
+import { invoke } from "@tauri-apps/api/core";
 
-type TabId = string;
+type TabId = number;
 
 export interface TabState {
     id: TabId;
@@ -22,18 +22,28 @@ export interface TabState {
 }
 
 export class AppState {
-    cefPort: number = -1;
+    private cefPort: number = -1;
 
-    cefClients: Map<TabId, CEFClient>;
+    private browserClient: BrowserClient;
+
+    private cefClients: Map<TabId, CEFClient>;
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
 
-    plugins: BrowserPlugin[];
+    private plugins: BrowserPlugin[];
 
-    constructor() {
+    constructor(port?: number) {
+        if (!port) {
+            invoke("launch_cef_command").then((value) => this.cefPort = value as number);
+        } else {
+            this.cefPort = port;
+        }
+
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
         this.cefClients = new Map();
         this.plugins = [];
+
+        this.browserClient = new BrowserClient("ws://localhost:" + this.cefPort + "/browser");
     }
 
     addPlugin(plugin: BrowserPlugin) {
@@ -45,19 +55,20 @@ export class AppState {
         this.cefPort = port;
     }
 
-    newTab(url?: string) {
-        let id = createUniqueId();
-        this.cefClients.set(id, new CEFClient("ws://localhost:" + this.cefPort + "/"));
-        this.cefClients.get(id)!.onTitleChanged = (title: string) => {
+    async newTab(url?: string) {
+        let id = await this.browserClient.openTab("https:://google.com");
+        let cefClient = new CEFClient("ws://localhost:" + this.cefPort + "/tab/" + id);
+
+        cefClient.onTitleChanged = (title: string) => {
             this.setTabs((tab) => id == tab.id, "title", title);
         }
-        this.cefClients.get(id)!.onNewTabRequested = (url: string) => {
+        cefClient.onNewTabRequested = (url: string) => {
             this.newTab(url);
         }
-        this.cefClients.get(id)!.onFaviconUrlChanged = (faviconUrl: string) => {
+        cefClient.onFaviconUrlChanged = (faviconUrl: string) => {
             this.setTabs((tab) => id == tab.id, "faviconUrl", faviconUrl);
         }
-        this.cefClients.get(id)!.onLoadStateChanged = (state: LoadState) => {
+        cefClient.onLoadStateChanged = (state: LoadState) => {
             this.setTabs((tab) => id == tab.id, "canGoBack", state.canGoBack);
             this.setTabs((tab) => id == tab.id, "canGoForward", state.canGoForward);
         }
@@ -90,7 +101,6 @@ export class AppState {
         const error = new Error();
         return error.stack ?? 'No stack trace available';
     }
-
 
     getActiveTab(): TabState | undefined {
         return this.tabs.find((tab) => tab.active);
@@ -137,9 +147,8 @@ export class AppState {
         let onlyTab = this.tabs.length == 1;
 
         this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
-        this.cefClients.get(tabId)!.close();
         this.cefClients.delete(tabId);
-
+        this.browserClient.closeTab(tabId);
         if (onlyTab) {
             return;
         }

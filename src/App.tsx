@@ -7,13 +7,11 @@ import Tab from "./components/sidebar/Tab";
 import "./App.css";
 import TabControls from "./components/sidebar/TabControls";
 import { ShortcutPlugin } from "./plugins/shortcuts/shortcut";
-import { invoke } from "@tauri-apps/api/core";
+
 
 function App() {
-  let app = new AppState();
+  let app = new AppState(8080);
   app.addPlugin(new ShortcutPlugin());
-
-  invoke("launch_cef_command").then((value) => app.setPort(value as number));
 
   return (
     <div class="app">
