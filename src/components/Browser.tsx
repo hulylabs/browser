@@ -36,7 +36,7 @@ function Browser(props: { app: AppState }) {
         canvas.width = rect.width;
         canvas.height = rect.height;
         imageData = ctx.createImageData(rect.width, rect.height);
-        props.app.resizeActiveTab(rect.width, rect.height);
+        props.app.resize(rect.width, rect.height);
       }, 100);
     });
 
@@ -57,91 +57,93 @@ function Browser(props: { app: AppState }) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let cefClient = props.app.cefClients.get(activeTab.id)!;
-    cefClient.onRender = (data) => {
-      // Calculate FPS
-      frameCount++;
-      const now = performance.now();
-      const elapsed = now - lastTime;
+    // let tabStream = props.app.tabStreams.get(activeTab.id)!;
+    // tabStream.onRender = (data) => {
+    //   // Calculate FPS
+    //   frameCount++;
+    //   const now = performance.now();
+    //   const elapsed = now - lastTime;
 
-      if (elapsed >= 1000) {
-        setFps(Math.round((frameCount * 1000) / elapsed));
-        frameCount = 0;
-        lastTime = now;
-      }
+    //   if (elapsed >= 1000) {
+    //     setFps(Math.round((frameCount * 1000) / elapsed));
+    //     frameCount = 0;
+    //     lastTime = now;
+    //   }
 
-      imageData.data.set(data);
-      ctx.putImageData(imageData, 0, 0);
-    };
+    //   imageData.data.set(data);
+    //   ctx.putImageData(imageData, 0, 0);
+    // };
 
-    cefClient.onPopupRender = (x, y, w, h, data) => {
-      if (
-        popupImageData == null ||
-        popupImageData.width !== w ||
-        popupImageData.height !== h
-      ) {
-        popupImageData = ctx.createImageData(w, h);
-      }
-      popupImageData.data.set(data);
-      ctx.putImageData(popupImageData, x, y);
-    };
+    // cefClient.onPopupRender = (x, y, w, h, data) => {
+    //   if (
+    //     popupImageData == null ||
+    //     popupImageData.width !== w ||
+    //     popupImageData.height !== h
+    //   ) {
+    //     popupImageData = ctx.createImageData(w, h);
+    //   }
+    //   popupImageData.data.set(data);
+    //   ctx.putImageData(popupImageData, x, y);
+    // };
 
 
-    cefClient.onCursorChanged = (cursor) => {
-      if (cursor === "Hand") {
-        canvas.style.cursor = "pointer";
-      }
+    // cefClient.onCursorChanged = (cursor) => {
+    //   if (cursor === "Hand") {
+    //     canvas.style.cursor = "pointer";
+    //   }
 
-      if (cursor === "Pointer") {
-        canvas.style.cursor = "default";
-      }
-    };
+    //   if (cursor === "Pointer") {
+    //     canvas.style.cursor = "default";
+    //   }
+    // };
 
-    cefClient.resize(canvas.width, canvas.height);
+    // cefClient.resize(canvas.width, canvas.height);
 
     canvas.onmousemove = function (e) {
-      cefClient.onMouseMove(e.offsetX, e.offsetY);
+      props.app.browserClient.mouseMove(activeTab.id, e.offsetX, e.offsetY);
     };
 
     canvas.onmousedown = function (e) {
-      cefClient.onMouseDown(e.offsetX, e.offsetY, e.button);
+      props.app.browserClient.mouseClick(activeTab.id, e.offsetX, e.offsetY, e.button, true);
     };
 
     canvas.onmouseup = function (e) {
-      cefClient.onMouseUp(e.offsetX, e.offsetY, e.button);
+      props.app.browserClient.mouseClick(activeTab.id, e.offsetX, e.offsetY, e.button, false);
     };
 
     canvas.onwheel = function (e) {
-      cefClient.onMouseWheel(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
+      props.app.browserClient.mouseWheel(activeTab.id, e.offsetX, e.offsetY, e.deltaX, e.deltaY);
     };
 
-    canvas.onkeydown = function (e) {
-      let character = 0;
-      if (e.key.length === 1) {
-        character = e.key.charCodeAt(0);
+    canvas.onkeydown = async function (e) {
+      if (e.code === "KeyS") {
+        let start = performance.now();
+        let screenshot = await props.app.browserClient.screenshot(activeTab.id);
+        let end = performance.now();
+        console.log(`Screenshot taken in ${end - start} ms`);
+        // imageData.data.set(screenshot);
+        // ctx.putImageData(imageData, 0, 0);
       }
-      let keycode = domCodeToKeyCode(e.code);
-      cefClient.onKeyPress(keycode, character, true, e.ctrlKey, e.shiftKey);
     };
 
-    canvas.onkeyup = function (e) {
-      let character = 0;
-      if (e.key.length === 1) {
-        character = e.key.charCodeAt(0);
-      }
-      let keycode = domCodeToKeyCode(e.code);
-      cefClient.onKeyPress(keycode, character, false, e.ctrlKey, e.shiftKey);
-    };
+    // canvas.onkeyup = function (e) {
+    //   let character = 0;
+    //   if (e.key.length === 1) {
+    //     character = e.key.charCodeAt(0);
+    //   }
+    //   let keycode = domCodeToKeyCode(e.code);
+    //   cefClient.onKeyPress(keycode, character, false, e.ctrlKey, e.shiftKey);
+    // };
 
-    canvas.onfocus = () => {
-      console.log("canvas focused");
-      cefClient.setFocus(true);
-    };
+    // canvas.onfocus = () => {
+    //   console.log("canvas focused");
+    //   cefClient.setFocus(true);
+    // };
 
-    canvas.onblur = () => {
-      console.log("canvas blurred");
-      cefClient.setFocus(false);
-    };
+    // canvas.onblur = () => {
+    //   console.log("canvas blurred");
+    //   cefClient.setFocus(false);
+    // };
 
   });
 
