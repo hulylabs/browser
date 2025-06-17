@@ -101,10 +101,11 @@ export class AppState {
         let activeTabIndex = this.tabs.findIndex((tab) => tab.active);
         if (activeTabIndex !== -1) {
             indices.push(activeTabIndex);
-            this.cefClients.get(this.tabs[activeTabIndex].id)?.stopVideo();
+            // this.cefClients.get(this.tabs[activeTabIndex].id)?.stopVideo();
         }
 
         this.setTabs(indices, "active", (active) => !active);
+        this.setTabs((tab) => tab.id === tabId, "active", true);
         this.cefClients.get(tabId)!.startVideo();
     }
 

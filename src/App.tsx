@@ -7,13 +7,11 @@ import Tab from "./components/sidebar/Tab";
 import "./App.css";
 import TabControls from "./components/sidebar/TabControls";
 import { ShortcutPlugin } from "./plugins/shortcuts/shortcut";
-import { invoke } from "@tauri-apps/api/core";
 
 function App() {
   let app = new AppState();
   app.addPlugin(new ShortcutPlugin());
-
-  invoke("launch_cef_command").then((value) => app.setPort(value as number));
+  app.setPort(8080);
 
   return (
     <div class="app">
@@ -29,8 +27,13 @@ function App() {
         </div>
       </div>
 
-      <div class="browser">
-        <Browser app={app} />
+      <div class="browser-grid">
+        <For each={app.tabs}>{(tab) => (
+          <div class="browser-item">
+            <Browser app={app} tab={tab} />
+          </div>
+        )}
+        </For>
       </div>
     </div>
   )

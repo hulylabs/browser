@@ -1,9 +1,9 @@
-import { createEffect, onCleanup, onMount, createSignal } from "solid-js";
-import { AppState } from "../state";
+import { onCleanup, onMount } from "solid-js";
+import { AppState, TabState } from "../state";
 import "./Browser.css";
 import { domCodeToKeyCode } from "../keyboard/keycodes";
 
-function Browser(props: { app: AppState }) {
+function Browser(props: { app: AppState, tab: TabState }) {
   let canvasContainer!: HTMLDivElement;
   let canvas!: HTMLCanvasElement;
   let imageData!: ImageData;
@@ -12,11 +12,6 @@ function Browser(props: { app: AppState }) {
 
   let resizeObserver!: ResizeObserver;
   let timeoutId: number = 0;
-
-  // Add FPS tracking state
-  const [fps, setFps] = createSignal(0);
-  let frameCount = 0;
-  let lastTime = performance.now();
 
   onMount(() => {
     let ctx = canvas.getContext("2d");
@@ -29,6 +24,9 @@ function Browser(props: { app: AppState }) {
     canvas.height = rect.height;
     imageData = ctx.createImageData(rect.width, rect.height);
 
+    let cefClient = props.app.cefClients.get(props.tab.id)!;
+
+
     resizeObserver = new ResizeObserver(() => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
@@ -36,40 +34,15 @@ function Browser(props: { app: AppState }) {
         canvas.width = rect.width;
         canvas.height = rect.height;
         imageData = ctx.createImageData(rect.width, rect.height);
-        props.app.resizeActiveTab(rect.width, rect.height);
+        cefClient.resize(canvas.width, canvas.height);
       }, 100);
     });
 
     resizeObserver.observe(canvasContainer);
-  });
-
-  onCleanup(() => {
-    resizeObserver?.disconnect();
-    clearTimeout(timeoutId);
-  });
-
-  createEffect(() => {
-    let activeTab = props.app.getActiveTab();
-    if (activeTab === undefined) return console.log("failed to get active tab");
-
-    let ctx = canvas.getContext("2d");
-    if (ctx == null) return console.error("Failed to get canvas context");
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let cefClient = props.app.cefClients.get(activeTab.id)!;
     cefClient.onRender = (data) => {
-      // Calculate FPS
-      frameCount++;
-      const now = performance.now();
-      const elapsed = now - lastTime;
-
-      if (elapsed >= 1000) {
-        setFps(Math.round((frameCount * 1000) / elapsed));
-        frameCount = 0;
-        lastTime = now;
-      }
-
       imageData.data.set(data);
       ctx.putImageData(imageData, 0, 0);
     };
@@ -132,23 +105,16 @@ function Browser(props: { app: AppState }) {
       let keycode = domCodeToKeyCode(e.code);
       cefClient.onKeyPress(keycode, character, false, e.ctrlKey, e.shiftKey);
     };
+  });
 
-    canvas.onfocus = () => {
-      console.log("canvas focused");
-      cefClient.setFocus(true);
-    };
-
-    canvas.onblur = () => {
-      console.log("canvas blurred");
-      cefClient.setFocus(false);
-    };
-
+  onCleanup(() => {
+    resizeObserver?.disconnect();
+    clearTimeout(timeoutId);
   });
 
   return (
     <>
       <div class="canvas-container" ref={canvasContainer}>
-        <div class="fps-counter">{fps()} FPS</div>
         <canvas tabIndex="0" class="canvas" ref={canvas}></canvas>
       </div>
     </>

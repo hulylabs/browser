@@ -16,6 +16,7 @@ body,
   height: 100%;
   display: flex;
 
+  overflow-y: scroll;
   background-color: #E9E8FD;
 }
 
@@ -37,18 +38,19 @@ body,
   overflow: auto;
 }
 
-.browser {
-  width: 100%;
-  margin: 8px;
-  border-radius: 8px;
+.browser-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+  flex: 1;
+  height: 100%;
+  overflow-y: scroll;
+}
+
+.browser-item {
   overflow: hidden;
+  border: 1px solid #ccc;
   background-color: white;
-
-  /* outline: 1px solid rgba(0, 0, 255, 0.3);
-  outline-offset: 2px; */
-
-  /* box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1),
-    0 0 0 2px rgba(0, 0, 0, 0.08),
-    0 0 0 3px rgba(0, 0, 0, 0.06),
-    0 0 0 4px rgba(0, 0, 0, 0.04); */
+  border-radius: 5px;
 }
