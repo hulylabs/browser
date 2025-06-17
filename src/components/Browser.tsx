@@ -85,6 +85,7 @@ function Browser(props: { app: AppState, tab: TabState }) {
     };
 
     canvas.onwheel = function (e) {
+      e.preventDefault();
       cefClient.onMouseWheel(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
     };
 

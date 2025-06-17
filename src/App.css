@@ -15,8 +15,7 @@ body,
 .app {
   height: 100%;
   display: flex;
-
-  overflow-y: scroll;
+  overflow: hidden;
   background-color: #E9E8FD;
 }
 
@@ -41,16 +40,16 @@ body,
 .browser-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  overflow-y: auto;
   gap: 10px;
   flex: 1;
   height: 100%;
-  overflow-y: scroll;
 }
 
 .browser-item {
   overflow: hidden;
-  border: 1px solid #ccc;
   background-color: white;
   border-radius: 5px;
+
+  height: 400px;
 }
