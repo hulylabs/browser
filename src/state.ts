@@ -52,10 +52,6 @@ export class AppState {
         this.plugins.push(plugin);
     }
 
-    setPort(port: number) {
-        this.cefPort = port;
-    }
-
     async newTab(url?: string) {
         let id = await this.browserClient.openTab("https:://google.com");
         this.browserClient.startVideo(id);
@@ -63,16 +59,17 @@ export class AppState {
 
         this.tabStreams.set(id, tabEventStream);
 
-        tabEventStream.onCursorChanged = (cursor: string) => {
-            console.log("Cursor changed for tab", id, "to", cursor);
+        tabEventStream.onFaviconUrlChanged = (url: string) => {
+            this.setTabs(tab => tab.id === id, "faviconUrl", url);
         };
 
         tabEventStream.onLoadStateChanged = (state: LoadState) => {
-            console.log("Load state changed for tab", id, "to", state);
+            this.setTabs(tab => tab.id === id, "canGoBack", state.canGoBack);
+            this.setTabs(tab => tab.id === id, "canGoForward", state.canGoForward);
         };
 
         tabEventStream.onTitleChanged = (title: string) => {
-            console.log("Title changed for tab", id, "to", title);
+            this.setTabs(tab => tab.id === id, "title", title);
         };
 
         let tab: TabState = {
@@ -121,7 +118,7 @@ export class AppState {
     }
 
     resize(width: number, height: number) {
-        // this.browserClient.resize(width, height);
+        this.browserClient.resize(width, height);
     }
 
     goTo(tabId: TabId, url: string) {

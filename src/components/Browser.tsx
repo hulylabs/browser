@@ -57,47 +57,45 @@ function Browser(props: { app: AppState }) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // let tabStream = props.app.tabStreams.get(activeTab.id)!;
-    // tabStream.onRender = (data) => {
-    //   // Calculate FPS
-    //   frameCount++;
-    //   const now = performance.now();
-    //   const elapsed = now - lastTime;
+    let tabStream = props.app.tabStreams.get(activeTab.id)!;
+    tabStream.onRender = (data) => {
+      // Calculate FPS
+      frameCount++;
+      const now = performance.now();
+      const elapsed = now - lastTime;
 
-    //   if (elapsed >= 1000) {
-    //     setFps(Math.round((frameCount * 1000) / elapsed));
-    //     frameCount = 0;
-    //     lastTime = now;
-    //   }
+      if (elapsed >= 1000) {
+        setFps(Math.round((frameCount * 1000) / elapsed));
+        frameCount = 0;
+        lastTime = now;
+      }
 
-    //   imageData.data.set(data);
-    //   ctx.putImageData(imageData, 0, 0);
-    // };
+      imageData.data.set(data);
+      ctx.putImageData(imageData, 0, 0);
+    };
 
-    // cefClient.onPopupRender = (x, y, w, h, data) => {
-    //   if (
-    //     popupImageData == null ||
-    //     popupImageData.width !== w ||
-    //     popupImageData.height !== h
-    //   ) {
-    //     popupImageData = ctx.createImageData(w, h);
-    //   }
-    //   popupImageData.data.set(data);
-    //   ctx.putImageData(popupImageData, x, y);
-    // };
+    tabStream.onPopupRender = (x, y, w, h, data) => {
+      if (
+        popupImageData == null ||
+        popupImageData.width !== w ||
+        popupImageData.height !== h
+      ) {
+        popupImageData = ctx.createImageData(w, h);
+      }
+      popupImageData.data.set(data);
+      ctx.putImageData(popupImageData, x, y);
+    };
 
 
-    // cefClient.onCursorChanged = (cursor) => {
-    //   if (cursor === "Hand") {
-    //     canvas.style.cursor = "pointer";
-    //   }
+    tabStream.onCursorChanged = (cursor) => {
+      if (cursor === "Hand") {
+        canvas.style.cursor = "pointer";
+      }
 
-    //   if (cursor === "Pointer") {
-    //     canvas.style.cursor = "default";
-    //   }
-    // };
-
-    // cefClient.resize(canvas.width, canvas.height);
+      if (cursor === "Pointer") {
+        canvas.style.cursor = "default";
+      }
+    };
 
     canvas.onmousemove = function (e) {
       props.app.browserClient.mouseMove(activeTab.id, e.offsetX, e.offsetY);
@@ -115,36 +113,33 @@ function Browser(props: { app: AppState }) {
       props.app.browserClient.mouseWheel(activeTab.id, e.offsetX, e.offsetY, e.deltaX, e.deltaY);
     };
 
-    canvas.onkeydown = async function (e) {
-      if (e.code === "KeyS") {
-        let start = performance.now();
-        let screenshot = await props.app.browserClient.screenshot(activeTab.id);
-        let end = performance.now();
-        console.log(`Screenshot taken in ${end - start} ms`);
-        // imageData.data.set(screenshot);
-        // ctx.putImageData(imageData, 0, 0);
+    canvas.onkeydown = function (e) {
+      let character = 0;
+      if (e.key.length === 1) {
+        character = e.key.charCodeAt(0);
       }
+      let keycode = domCodeToKeyCode(e.code);
+      props.app.browserClient.keyPress(activeTab.id, keycode, character, true, e.ctrlKey, e.shiftKey);
     };
 
-    // canvas.onkeyup = function (e) {
-    //   let character = 0;
-    //   if (e.key.length === 1) {
-    //     character = e.key.charCodeAt(0);
-    //   }
-    //   let keycode = domCodeToKeyCode(e.code);
-    //   cefClient.onKeyPress(keycode, character, false, e.ctrlKey, e.shiftKey);
-    // };
+    canvas.onkeyup = function (e) {
+      let character = 0;
+      if (e.key.length === 1) {
+        character = e.key.charCodeAt(0);
+      }
+      let keycode = domCodeToKeyCode(e.code);
+      props.app.browserClient.keyPress(activeTab.id, keycode, character, false, e.ctrlKey, e.shiftKey);
+    };
 
-    // canvas.onfocus = () => {
-    //   console.log("canvas focused");
-    //   cefClient.setFocus(true);
-    // };
+    canvas.onfocus = () => {
+      console.log("canvas focused");
+      props.app.browserClient.setFocus(activeTab.id, true);
+    };
 
-    // canvas.onblur = () => {
-    //   console.log("canvas blurred");
-    //   cefClient.setFocus(false);
-    // };
-
+    canvas.onblur = () => {
+      console.log("canvas blurred");
+      props.app.browserClient.setFocus(activeTab.id, false);
+    };
   });
 
   return (
