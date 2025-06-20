@@ -45,6 +45,59 @@ export class AppState {
         this.plugins = [];
 
         this.browserClient = new BrowserClient("ws://localhost:" + this.cefPort + "/browser");
+
+        // Better do
+        // (function loop() {
+        //   setTimeout(() => {
+        //     // Your logic here
+
+        //     loop();
+        //   }, delay);
+        // })();
+
+        setInterval(async () => {
+            let tabIds = await this.browserClient.getTabs();
+
+            for (let id of tabIds) {
+                if (!this.tabs.some(t => t.id === id)) {
+                    let tabEventStream = new TabEventStream("ws://localhost:" + this.cefPort + "/tab/" + id);
+
+                    this.tabStreams.set(id, tabEventStream);
+
+                    tabEventStream.onFaviconUrlChanged = (url: string) => {
+                        this.setTabs(tab => tab.id === id, "faviconUrl", url);
+                    };
+
+                    tabEventStream.onLoadStateChanged = (state: LoadState) => {
+                        this.setTabs(tab => tab.id === id, "canGoBack", state.canGoBack);
+                        this.setTabs(tab => tab.id === id, "canGoForward", state.canGoForward);
+                    };
+
+                    tabEventStream.onTitleChanged = (title: string) => {
+                        this.setTabs(tab => tab.id === id, "title", title);
+                    };
+
+                    let tab: TabState = {
+                        id: id,
+                        title: "New Tab",
+                        faviconUrl: "",
+                        active: false,
+                        canGoBack: false,
+                        canGoForward: false,
+
+                        goTo: (url: string) => this.goTo(id, url),
+                        activate: () => this.setActiveTab(tab.id),
+                        close: () => this.closeTab(tab.id),
+                        goBack: () => this.goBack(id),
+                        goForward: () => this.goForward(id),
+                        reload: () => this.reload(id),
+                    };
+
+                    this.setTabs((prev) => [...prev, tab]);
+                }
+            }
+
+        }, 5000);
     }
 
     addPlugin(plugin: BrowserPlugin) {
@@ -53,7 +106,7 @@ export class AppState {
     }
 
     async newTab(url?: string) {
-        let id = await this.browserClient.openTab("https:://google.com");
+        let id = await this.browserClient.openTab(url);
         this.browserClient.startVideo(id);
         let tabEventStream = new TabEventStream("ws://localhost:" + this.cefPort + "/tab/" + id);
 
