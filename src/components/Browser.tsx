@@ -2,13 +2,12 @@ import { createEffect, onCleanup, onMount, createSignal } from "solid-js";
 import { AppState } from "../state";
 import "./Browser.css";
 import { domCodeToKeyCode } from "../keyboard/keycodes";
+import { Cursor } from "cef-client/dist/event_stream";
 
 function Browser(props: { app: AppState }) {
   let canvasContainer!: HTMLDivElement;
   let canvas!: HTMLCanvasElement;
   let imageData!: ImageData;
-
-  let popupImageData!: ImageData;
 
   let resizeObserver!: ResizeObserver;
   let timeoutId: number = 0;
@@ -20,11 +19,9 @@ function Browser(props: { app: AppState }) {
 
   onMount(() => {
     let ctx = canvas.getContext("2d");
-
     if (ctx == null) return console.error("Failed to get canvas context");
 
     const rect = canvasContainer.getBoundingClientRect();
-
     canvas.width = rect.width;
     canvas.height = rect.height;
     imageData = ctx.createImageData(rect.width, rect.height);
@@ -49,16 +46,18 @@ function Browser(props: { app: AppState }) {
   });
 
   createEffect(() => {
-    let activeTab = props.app.getActiveTab();
-    if (activeTab === undefined) return console.log("failed to get active tab");
+    let tabState = props.app.getActiveTab();
+    if (tabState === undefined) return console.log("failed to get active tab");
 
     let ctx = canvas.getContext("2d");
     if (ctx == null) return console.error("Failed to get canvas context");
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let tabStream = props.app.tabStreams.get(activeTab.id)!;
-    tabStream.onRender = (data) => {
+    let tabStream = props.app.tabStreams.get(tabState.id)!;
+    let tab = props.app.tabConnections.get(tabState.id)!;
+
+    tabStream.on("Frame", (data) => {
       // Calculate FPS
       frameCount++;
       const now = performance.now();
@@ -72,73 +71,46 @@ function Browser(props: { app: AppState }) {
 
       imageData.data.set(data);
       ctx.putImageData(imageData, 0, 0);
-    };
+    });
 
-    tabStream.onPopupRender = (x, y, w, h, data) => {
-      if (
-        popupImageData == null ||
-        popupImageData.width !== w ||
-        popupImageData.height !== h
-      ) {
-        popupImageData = ctx.createImageData(w, h);
-      }
-      popupImageData.data.set(data);
-      ctx.putImageData(popupImageData, x, y);
-    };
-
-
-    tabStream.onCursorChanged = (cursor) => {
-      if (cursor === "Hand") {
-        canvas.style.cursor = "pointer";
-      }
-
-      if (cursor === "Pointer") {
-        canvas.style.cursor = "default";
-      }
-    };
+    tabStream.on("Cursor", (cursor) => {
+      const cursorMap: Record<Cursor, string> = {
+        [Cursor.Pointer]: "default",
+        [Cursor.Hand]: "pointer",
+        [Cursor.IBeam]: "text",
+        [Cursor.Crosshair]: "crosshair",
+      };
+      canvas.style.cursor = cursorMap[cursor] ?? "default";
+    });
 
     canvas.onmousemove = function (e) {
-      props.app.browserClient.mouseMove(activeTab.id, e.offsetX, e.offsetY);
+      tab.mouseMove(e.offsetX, e.offsetY);
     };
 
     canvas.onmousedown = function (e) {
-      props.app.browserClient.mouseClick(activeTab.id, e.offsetX, e.offsetY, e.button, true);
+      tab.click(e.offsetX, e.offsetY, e.button, true);
     };
 
     canvas.onmouseup = function (e) {
-      props.app.browserClient.mouseClick(activeTab.id, e.offsetX, e.offsetY, e.button, false);
+      tab.click(e.offsetX, e.offsetY, e.button, false);
     };
 
     canvas.onwheel = function (e) {
-      props.app.browserClient.mouseWheel(activeTab.id, e.offsetX, e.offsetY, e.deltaX, e.deltaY);
+      tab.scroll(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
     };
 
     canvas.onkeydown = function (e) {
-      let character = 0;
-      if (e.key.length === 1) {
-        character = e.key.charCodeAt(0);
+      const keyCode = domCodeToKeyCode(e.code);
+      if (keyCode !== undefined) {
+        tab.key(keyCode, 0, true, e.shiftKey, e.ctrlKey);
       }
-      let keycode = domCodeToKeyCode(e.code);
-      props.app.browserClient.keyPress(activeTab.id, keycode, character, true, e.ctrlKey, e.shiftKey);
     };
 
     canvas.onkeyup = function (e) {
-      let character = 0;
-      if (e.key.length === 1) {
-        character = e.key.charCodeAt(0);
+      const keyCode = domCodeToKeyCode(e.code);
+      if (keyCode !== undefined) {
+        tab.key(keyCode, 0, false, e.shiftKey, e.ctrlKey);
       }
-      let keycode = domCodeToKeyCode(e.code);
-      props.app.browserClient.keyPress(activeTab.id, keycode, character, false, e.ctrlKey, e.shiftKey);
-    };
-
-    canvas.onfocus = () => {
-      console.log("canvas focused");
-      props.app.browserClient.setFocus(activeTab.id, true);
-    };
-
-    canvas.onblur = () => {
-      console.log("canvas blurred");
-      props.app.browserClient.setFocus(activeTab.id, false);
     };
   });
 

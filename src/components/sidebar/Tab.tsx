@@ -17,9 +17,9 @@ export default function Tab(props: { tab: TabState }) {
         <div class={styles.tab} classList={{ [styles.active]: props.tab.active }} onClick={activate}>
             <div class={styles.tabInfo}>
 
-                <Show when={props.tab.faviconUrl} fallback={<div class={`${styles.favicon} ${styles.empty}`} />}>
+                <Show when={props.tab.favicon} fallback={<div class={`${styles.favicon} ${styles.empty}`} />}>
                     <div class={styles.favicon} >
-                        <img src={props.tab.faviconUrl} />
+                        <img src={props.tab.favicon} />
                     </div>
                 </Show>
 
