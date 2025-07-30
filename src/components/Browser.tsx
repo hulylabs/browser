@@ -103,6 +103,9 @@ function Browser(props: { app: AppState }) {
       const keyCode = domCodeToKeyCode(e.code);
       if (keyCode !== undefined) {
         tab.key(keyCode, 0, true, e.shiftKey, e.ctrlKey);
+        if (e.key.length === 1) {
+          tab.char(e.key.charCodeAt(0));
+        }
       }
     };
 
