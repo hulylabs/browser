@@ -28,6 +28,8 @@ export class AppState {
     private cefPort: number = -1;
     private plugins: BrowserPlugin[];
 
+    profiles: { name: string }[];
+
     browser: Browser | undefined;
     tabStreams: Map<TabId, TabEventStream>;
 
@@ -46,10 +48,12 @@ export class AppState {
         this.tabStreams = new Map();
         this.tabConnections = new Map();
         this.plugins = [];
+        this.profiles = [];
 
-        connect("ws://localhost:" + this.cefPort + "/browser").then((browser) => {
-            this.browser = browser;
-        });
+        this.initialize();
+        // connect("ws://localhost:" + this.cefPort + "/browser").then((browser) => {
+        //     this.browser = browser;
+        // });
         // Better do
         // (function loop() {
         //   setTimeout(() => {
@@ -102,6 +106,28 @@ export class AppState {
         //     }
 
         // }, 5000);
+    }
+
+    async initialize() {
+        try {
+            const instancesResponse = await fetch(`http://localhost:3000/instances`);
+            if (!instancesResponse.ok) throw new Error(`Failed to fetch instances: ${instancesResponse.statusText}`);
+            const instances: { name: string }[] = await instancesResponse.json();
+            this.profiles = instances;
+
+            if (this.profiles.length === 0) {
+                this.profiles.push({ name: "Default" });
+            }
+
+            const instanceName = this.profiles[0].name;
+            const addressResponse = await fetch(`http://localhost:3000/instance/${instanceName}`);
+            if (!addressResponse.ok) throw new Error(`Failed to fetch instance: ${addressResponse.statusText}`);
+            const address = await addressResponse.text();
+            this.browser = await connect(address);
+            
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     addPlugin(plugin: BrowserPlugin) {

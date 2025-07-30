@@ -7,10 +7,11 @@ import Tab from "./components/sidebar/Tab";
 import "./App.css";
 import TabControls from "./components/sidebar/TabControls";
 import { ShortcutPlugin } from "./plugins/shortcuts/shortcut";
+import { Profiles } from "./components/sidebar/Profiles";
 
 
 function App() {
-  let app = new AppState(8080);
+  let app = new AppState(3000);
   app.addPlugin(new ShortcutPlugin());
 
   return (
@@ -25,6 +26,7 @@ function App() {
           )}
           </For>
         </div>
+        <Profiles app={app} />
       </div>
 
       <div class="browser">
