@@ -1,14 +1,17 @@
-import { CEFClient, LoadState } from "cef-client";
+import { Browser, connect } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
-import { createUniqueId } from "solid-js";
+import { invoke } from "@tauri-apps/api/core";
+import { LoadState, TabEventStream } from "cef-client/dist/event_stream";
+import { Tab } from "cef-client/dist/tab";
 
-type TabId = string;
+
+type TabId = number;
 
 export interface TabState {
     id: TabId;
     title: string;
-    faviconUrl: string;
+    favicon: string;
     active: boolean;
     canGoBack: boolean;
     canGoForward: boolean;
@@ -22,18 +25,83 @@ export interface TabState {
 }
 
 export class AppState {
-    cefPort: number = -1;
+    private cefPort: number = -1;
+    private plugins: BrowserPlugin[];
 
-    cefClients: Map<TabId, CEFClient>;
+    browser: Browser | undefined;
+    tabStreams: Map<TabId, TabEventStream>;
+
+    tabConnections: Map<TabId, Tab>;
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
 
-    plugins: BrowserPlugin[];
+    constructor(port?: number) {
+        if (!port) {
+            invoke("launch_cef_command").then((value) => this.cefPort = value as number);
+        } else {
+            this.cefPort = port;
+        }
 
-    constructor() {
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
-        this.cefClients = new Map();
+        this.tabStreams = new Map();
+        this.tabConnections = new Map();
         this.plugins = [];
+
+        connect("ws://localhost:" + this.cefPort + "/browser").then((browser) => {
+            this.browser = browser;
+        });
+        // Better do
+        // (function loop() {
+        //   setTimeout(() => {
+        //     // Your logic here
+
+        //     loop();
+        //   }, delay);
+        // })();
+
+        // setInterval(async () => {
+        //     let tabIds = await this.browser.getTabs();
+
+        //     for (let id of tabIds) {
+        //         if (!this.tabs.some(t => t.id === id)) {
+        //             let tabEventStream = new TabEventStream("ws://localhost:" + this.cefPort + "/tab/" + id);
+
+        //             this.tabStreams.set(id, tabEventStream);
+
+        //             tabEventStream.onFaviconUrlChanged = (url: string) => {
+        //                 this.setTabs(tab => tab.id === id, "faviconUrl", url);
+        //             };
+
+        //             tabEventStream.onLoadStateChanged = (state: LoadState) => {
+        //                 this.setTabs(tab => tab.id === id, "canGoBack", state.canGoBack);
+        //                 this.setTabs(tab => tab.id === id, "canGoForward", state.canGoForward);
+        //             };
+
+        //             tabEventStream.onTitleChanged = (title: string) => {
+        //                 this.setTabs(tab => tab.id === id, "title", title);
+        //             };
+
+        //             let tab: TabState = {
+        //                 id: id,
+        //                 title: "New Tab",
+        //                 faviconUrl: "",
+        //                 active: false,
+        //                 canGoBack: false,
+        //                 canGoForward: false,
+
+        //                 goTo: (url: string) => this.goTo(id, url),
+        //                 activate: () => this.setActiveTab(tab.id),
+        //                 close: () => this.closeTab(tab.id),
+        //                 goBack: () => this.goBack(id),
+        //                 goForward: () => this.goForward(id),
+        //                 reload: () => this.reload(id),
+        //             };
+
+        //             this.setTabs((prev) => [...prev, tab]);
+        //         }
+        //     }
+
+        // }, 5000);
     }
 
     addPlugin(plugin: BrowserPlugin) {
@@ -41,31 +109,31 @@ export class AppState {
         this.plugins.push(plugin);
     }
 
-    setPort(port: number) {
-        this.cefPort = port;
-    }
+    async newTab(url?: string) {
+        let tab = await this.browser?.openTab({ url })!;
+        let id = tab.id;
+        let tabEventStream = tab.events();
 
-    newTab(url?: string) {
-        let id = createUniqueId();
-        this.cefClients.set(id, new CEFClient("ws://localhost:" + this.cefPort + "/"));
-        this.cefClients.get(id)!.onTitleChanged = (title: string) => {
-            this.setTabs((tab) => id == tab.id, "title", title);
-        }
-        this.cefClients.get(id)!.onNewTabRequested = (url: string) => {
-            this.newTab(url);
-        }
-        this.cefClients.get(id)!.onFaviconUrlChanged = (faviconUrl: string) => {
-            this.setTabs((tab) => id == tab.id, "faviconUrl", faviconUrl);
-        }
-        this.cefClients.get(id)!.onLoadStateChanged = (state: LoadState) => {
-            this.setTabs((tab) => id == tab.id, "canGoBack", state.canGoBack);
-            this.setTabs((tab) => id == tab.id, "canGoForward", state.canGoForward);
-        }
+        this.tabConnections.set(id, tab);
+        this.tabStreams.set(tab.id, tabEventStream);
 
-        let tab: TabState = {
+        tabEventStream.on("Favicon", (url: string) => {
+            this.setTabs(tab => tab.id === id, "favicon", url);
+        });
+
+        tabEventStream.on("LoadState", (state: LoadState) => {
+            this.setTabs(tab => tab.id === id, "canGoBack", state.canGoBack);
+            this.setTabs(tab => tab.id === id, "canGoForward", state.canGoForward);
+        });
+
+        tabEventStream.on("Title", (title: string) => {
+            this.setTabs(tab => tab.id === id, "title", title);
+        });
+
+        let tabState: TabState = {
             id: id,
             title: "New Tab",
-            faviconUrl: "",
+            favicon: "",
             active: false,
             canGoBack: false,
             canGoForward: false,
@@ -82,7 +150,7 @@ export class AppState {
             this.goTo(id, url);
         }
 
-        this.setTabs((prev) => [...prev, tab]);
+        this.setTabs((prev) => [...prev, tabState]);
         this.setActiveTab(id);
     }
 
@@ -90,7 +158,6 @@ export class AppState {
         const error = new Error();
         return error.stack ?? 'No stack trace available';
     }
-
 
     getActiveTab(): TabState | undefined {
         return this.tabs.find((tab) => tab.active);
@@ -101,34 +168,31 @@ export class AppState {
         let activeTabIndex = this.tabs.findIndex((tab) => tab.active);
         if (activeTabIndex !== -1) {
             indices.push(activeTabIndex);
-            this.cefClients.get(this.tabs[activeTabIndex].id)?.stopVideo();
+            this.tabConnections.get(this.tabs[activeTabIndex].id)?.stopVideo();
         }
 
         this.setTabs(indices, "active", (active) => !active);
-        this.cefClients.get(tabId)!.startVideo();
+        this.tabConnections.get(tabId)?.startVideo();
     }
 
-    resizeActiveTab(width: number, height: number) {
-        let activeTab = this.getActiveTab();
-        if (activeTab) {
-            this.cefClients.get(activeTab.id)!.resize(width, height);
-        }
+    resize(width: number, height: number) {
+        this.browser?.resize(width, height);
     }
 
     goTo(tabId: TabId, url: string) {
-        this.cefClients.get(tabId)!.goTo(url);
+        this.tabConnections.get(tabId)?.navigate(url);
     }
 
     goBack(tabId: TabId) {
-        this.cefClients.get(tabId)!.goBack();
+        this.tabConnections.get(tabId)?.back();
     }
 
     goForward(tabId: TabId) {
-        this.cefClients.get(tabId)!.goForward();
+        this.tabConnections.get(tabId)?.forward();
     }
 
     reload(tabId: TabId) {
-        this.cefClients.get(tabId)!.reload();
+        this.tabConnections.get(tabId)?.reload();
     }
 
     closeTab(tabId: TabId) {
@@ -137,9 +201,9 @@ export class AppState {
         let onlyTab = this.tabs.length == 1;
 
         this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
-        this.cefClients.get(tabId)!.close();
-        this.cefClients.delete(tabId);
-
+        this.tabStreams.delete(tabId);
+        this.tabConnections.get(tabId)?.close();
+        this.tabConnections.delete(tabId);
         if (onlyTab) {
             return;
         }
