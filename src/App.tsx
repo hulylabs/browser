@@ -11,7 +11,7 @@ import { Profiles } from "./components/sidebar/Profiles";
 
 
 function App() {
-  let app = new AppState(3000);
+  let app = new AppState();
   app.addPlugin(new ShortcutPlugin());
 
   return (
