@@ -1,14 +1,15 @@
-import { Browser, connect } from "cef-client";
+import { Browser, connect, TabEventStream, LoadState, Tab } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
-import { invoke } from "@tauri-apps/api/core";
-import { LoadState, TabEventStream } from "cef-client/dist/event_stream";
-import { Tab } from "cef-client/dist/tab";
-
 
 type TabId = number;
 
-export interface TabState {
+interface TabConnection {
+    page: Tab;
+    events: TabEventStream;
+}
+
+interface TabState {
     id: TabId;
     title: string;
     favicon: string;
@@ -25,109 +26,17 @@ export interface TabState {
 }
 
 export class AppState {
-    private cefPort: number = -1;
     private plugins: BrowserPlugin[];
 
-    profiles: { name: string }[];
-
     browser: Browser | undefined;
-    tabStreams: Map<TabId, TabEventStream>;
+    connections: Map<TabId, TabConnection> = new Map();
 
-    tabConnections: Map<TabId, Tab>;
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
 
-    constructor(port?: number) {
-        if (!port) {
-            invoke("launch_cef_command").then((value) => this.cefPort = value as number);
-        } else {
-            this.cefPort = port;
-        }
-
+    constructor() {
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
-        this.tabStreams = new Map();
-        this.tabConnections = new Map();
         this.plugins = [];
-        this.profiles = [];
-
-        this.initialize();
-        // connect("ws://localhost:" + this.cefPort + "/browser").then((browser) => {
-        //     this.browser = browser;
-        // });
-        // Better do
-        // (function loop() {
-        //   setTimeout(() => {
-        //     // Your logic here
-
-        //     loop();
-        //   }, delay);
-        // })();
-
-        // setInterval(async () => {
-        //     let tabIds = await this.browser.getTabs();
-
-        //     for (let id of tabIds) {
-        //         if (!this.tabs.some(t => t.id === id)) {
-        //             let tabEventStream = new TabEventStream("ws://localhost:" + this.cefPort + "/tab/" + id);
-
-        //             this.tabStreams.set(id, tabEventStream);
-
-        //             tabEventStream.onFaviconUrlChanged = (url: string) => {
-        //                 this.setTabs(tab => tab.id === id, "faviconUrl", url);
-        //             };
-
-        //             tabEventStream.onLoadStateChanged = (state: LoadState) => {
-        //                 this.setTabs(tab => tab.id === id, "canGoBack", state.canGoBack);
-        //                 this.setTabs(tab => tab.id === id, "canGoForward", state.canGoForward);
-        //             };
-
-        //             tabEventStream.onTitleChanged = (title: string) => {
-        //                 this.setTabs(tab => tab.id === id, "title", title);
-        //             };
-
-        //             let tab: TabState = {
-        //                 id: id,
-        //                 title: "New Tab",
-        //                 faviconUrl: "",
-        //                 active: false,
-        //                 canGoBack: false,
-        //                 canGoForward: false,
-
-        //                 goTo: (url: string) => this.goTo(id, url),
-        //                 activate: () => this.setActiveTab(tab.id),
-        //                 close: () => this.closeTab(tab.id),
-        //                 goBack: () => this.goBack(id),
-        //                 goForward: () => this.goForward(id),
-        //                 reload: () => this.reload(id),
-        //             };
-
-        //             this.setTabs((prev) => [...prev, tab]);
-        //         }
-        //     }
-
-        // }, 5000);
-    }
-
-    async initialize() {
-        try {
-            const instancesResponse = await fetch(`http://localhost:3000/instances`);
-            if (!instancesResponse.ok) throw new Error(`Failed to fetch instances: ${instancesResponse.statusText}`);
-            const instances: { name: string }[] = await instancesResponse.json();
-            this.profiles = instances;
-
-            if (this.profiles.length === 0) {
-                this.profiles.push({ name: "Default" });
-            }
-
-            const instanceName = this.profiles[0].name;
-            const addressResponse = await fetch(`http://localhost:3000/instance/${instanceName}`);
-            if (!addressResponse.ok) throw new Error(`Failed to fetch instance: ${addressResponse.statusText}`);
-            const address = await addressResponse.text();
-            this.browser = await connect(address);
-            
-        } catch (error) {
-            console.error(error);
-        }
     }
 
     addPlugin(plugin: BrowserPlugin) {
@@ -135,28 +44,124 @@ export class AppState {
         this.plugins.push(plugin);
     }
 
+    async setProfile(profile: string) {
+        let response = await fetch(`/api/profiles/${profile}/cef`);
+        let json = await response.json();
+        let address = json.data.address;
+
+        this.browser = await connect(address);
+
+        this.setTabs([]);
+        await this.fetchTabs();
+    }
+
+    async fetchTabs() {
+        if (!this.browser) {
+            console.error("Browser is not connected");
+            return;
+        }
+
+        let tabs = await this.browser?.tabs();
+        for (let tab of tabs) {
+            this.addTab(tab);
+        }
+
+    }
+
     async newTab(url?: string) {
         let tab = await this.browser?.openTab({ url })!;
+        this.addTab(tab);
+    }
+
+    getStackTrace(): string {
+        const error = new Error();
+        return error.stack ?? 'No stack trace available';
+    }
+
+    getActiveTab(): TabState | undefined {
+        return this.tabs.find((tab) => tab.active);
+    }
+
+    setActiveTab(tabId: TabId) {
+        let tab = this.tabs.find((tab) => tab.id === tabId);
+        if (!tab) {
+            console.error(`Tab with id ${tabId} not found`);
+            return;
+        }
+
+        let indices = [this.tabs.findIndex((tab) => tab.id === tabId)];
+        let activeTabIndex = this.tabs.findIndex((tab) => tab.active);
+        if (activeTabIndex !== -1) {
+            indices.push(activeTabIndex);
+            this.connections.get(tabId)?.page.stopVideo();
+        }
+
+        this.setTabs(indices, "active", (active) => !active);
+        this.connections.get(tabId)?.page.startVideo();
+    }
+
+    resize(width: number, height: number) {
+        this.browser?.resize(width, height);
+    }
+
+    goTo(tabId: TabId, url: string) {
+        this.connections.get(tabId)?.page.navigate(url);
+    }
+
+    goBack(tabId: TabId) {
+        this.connections.get(tabId)?.page.back();
+    }
+
+    goForward(tabId: TabId) {
+        this.connections.get(tabId)?.page.forward();
+    }
+
+    reload(tabId: TabId) {
+        this.connections.get(tabId)?.page.reload();
+    }
+
+    closeTab(tabId: TabId) {
+        let index = this.tabs.findIndex((tab) => tab.id === tabId);
+        let tabToClose = this.tabs[index];
+        let onlyTab = this.tabs.length == 1;
+
+        this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
+        this.connections.get(tabId)?.page.close();
+        // this.connections.get(tabId)?.events.close();
+        this.connections.delete(tabId);
+        if (onlyTab) {
+            return;
+        }
+
+        if (tabToClose.active) {
+            let newActiveTabIndex = index - 1 < 0 ? 0 : index - 1;
+            this.setActiveTab(this.tabs[newActiveTabIndex].id);
+        }
+    }
+
+    private addTab(tab: Tab) {
         let id = tab.id;
-        let tabEventStream = tab.events();
+        let events = tab.events();
 
-        this.tabConnections.set(id, tab);
-        this.tabStreams.set(tab.id, tabEventStream);
-
-        tabEventStream.on("Favicon", (url: string) => {
-            this.setTabs(tab => tab.id === id, "favicon", url);
+        this.connections.set(id, {
+            page: tab,
+            events: events
         });
 
-        tabEventStream.on("LoadState", (state: LoadState) => {
-            this.setTabs(tab => tab.id === id, "canGoBack", state.canGoBack);
-            this.setTabs(tab => tab.id === id, "canGoForward", state.canGoForward);
+        events.on("Favicon", (url: string) => {
+            this.setTabs(t => t.id === id, "favicon", url);
         });
 
-        tabEventStream.on("Title", (title: string) => {
-            this.setTabs(tab => tab.id === id, "title", title);
+        events.on("LoadState", (state: LoadState) => {
+            this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
+            this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
         });
 
-        let tabState: TabState = {
+        events.on("Title", (title: string) => {
+            this.setTabs(t => t.id === id, "title", title);
+        });
+
+        let state: TabState = {
             id: id,
             title: "New Tab",
             favicon: "",
@@ -172,71 +177,7 @@ export class AppState {
             reload: () => this.reload(id),
         };
 
-        if (url) {
-            this.goTo(id, url);
-        }
-
-        this.setTabs((prev) => [...prev, tabState]);
+        this.setTabs((prev) => [...prev, state]);
         this.setActiveTab(id);
-    }
-
-    getStackTrace(): string {
-        const error = new Error();
-        return error.stack ?? 'No stack trace available';
-    }
-
-    getActiveTab(): TabState | undefined {
-        return this.tabs.find((tab) => tab.active);
-    }
-
-    setActiveTab(tabId: TabId) {
-        let indices = [this.tabs.findIndex((tab) => tab.id === tabId)];
-        let activeTabIndex = this.tabs.findIndex((tab) => tab.active);
-        if (activeTabIndex !== -1) {
-            indices.push(activeTabIndex);
-            this.tabConnections.get(this.tabs[activeTabIndex].id)?.stopVideo();
-        }
-
-        this.setTabs(indices, "active", (active) => !active);
-        this.tabConnections.get(tabId)?.startVideo();
-    }
-
-    resize(width: number, height: number) {
-        this.browser?.resize(width, height);
-    }
-
-    goTo(tabId: TabId, url: string) {
-        this.tabConnections.get(tabId)?.navigate(url);
-    }
-
-    goBack(tabId: TabId) {
-        this.tabConnections.get(tabId)?.back();
-    }
-
-    goForward(tabId: TabId) {
-        this.tabConnections.get(tabId)?.forward();
-    }
-
-    reload(tabId: TabId) {
-        this.tabConnections.get(tabId)?.reload();
-    }
-
-    closeTab(tabId: TabId) {
-        let index = this.tabs.findIndex((tab) => tab.id === tabId);
-        let tabToClose = this.tabs[index];
-        let onlyTab = this.tabs.length == 1;
-
-        this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
-        this.tabStreams.delete(tabId);
-        this.tabConnections.get(tabId)?.close();
-        this.tabConnections.delete(tabId);
-        if (onlyTab) {
-            return;
-        }
-
-        if (tabToClose.active) {
-            let newActiveTabIndex = index - 1 < 0 ? 0 : index - 1;
-            this.setActiveTab(this.tabs[newActiveTabIndex].id);
-        }
     }
 }

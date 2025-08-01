@@ -54,10 +54,9 @@ function Browser(props: { app: AppState }) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let tabStream = props.app.tabStreams.get(tabState.id)!;
-    let tab = props.app.tabConnections.get(tabState.id)!;
+    let connection = props.app.connections.get(tabState.id)!;
 
-    tabStream.on("Frame", (data) => {
+    connection.events.on("Frame", (data) => {
       // Calculate FPS
       frameCount++;
       const now = performance.now();
@@ -73,7 +72,7 @@ function Browser(props: { app: AppState }) {
       ctx.putImageData(imageData, 0, 0);
     });
 
-    tabStream.on("Cursor", (cursor) => {
+    connection.events.on("Cursor", (cursor) => {
       const cursorMap: Record<Cursor, string> = {
         [Cursor.Pointer]: "default",
         [Cursor.Hand]: "pointer",
@@ -84,27 +83,27 @@ function Browser(props: { app: AppState }) {
     });
 
     canvas.onmousemove = function (e) {
-      tab.mouseMove(e.offsetX, e.offsetY);
+      connection.page.mouseMove(e.offsetX, e.offsetY);
     };
 
     canvas.onmousedown = function (e) {
-      tab.click(e.offsetX, e.offsetY, e.button, true);
+      connection.page.click(e.offsetX, e.offsetY, e.button, true);
     };
 
     canvas.onmouseup = function (e) {
-      tab.click(e.offsetX, e.offsetY, e.button, false);
+      connection.page.click(e.offsetX, e.offsetY, e.button, false);
     };
 
     canvas.onwheel = function (e) {
-      tab.scroll(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
+      connection.page.scroll(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
     };
 
     canvas.onkeydown = function (e) {
       const keyCode = domCodeToKeyCode(e.code);
       if (keyCode !== undefined) {
-        tab.key(keyCode, 0, true, e.shiftKey, e.ctrlKey);
+        connection.page.key(keyCode, 0, true, e.shiftKey, e.ctrlKey);
         if (e.key.length === 1) {
-          tab.char(e.key.charCodeAt(0));
+          connection.page.char(e.key.charCodeAt(0));
         }
       }
     };
@@ -112,7 +111,7 @@ function Browser(props: { app: AppState }) {
     canvas.onkeyup = function (e) {
       const keyCode = domCodeToKeyCode(e.code);
       if (keyCode !== undefined) {
-        tab.key(keyCode, 0, false, e.shiftKey, e.ctrlKey);
+        connection.page.key(keyCode, 0, false, e.shiftKey, e.ctrlKey);
       }
     };
   });
