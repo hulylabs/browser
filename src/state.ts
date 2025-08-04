@@ -53,6 +53,21 @@ export class AppState {
 
         this.setTabs([]);
         await this.fetchTabs();
+
+        setInterval(async () => {
+            if (!this.browser) {
+                console.error("Browser is not connected");
+                return;
+            }
+
+            let tabs = await this.browser?.tabs();
+            for (let tab of tabs) {
+                if (!this.tabs.some(t => t.id === tab.id)) {
+                    this.addTab(tab);
+                }
+            }
+        }, 5000);
+
     }
 
     async fetchTabs() {
@@ -71,6 +86,7 @@ export class AppState {
     async newTab(url?: string) {
         let tab = await this.browser?.openTab({ url })!;
         this.addTab(tab);
+        this.setActiveTab(tab.id);
     }
 
     getStackTrace(): string {
@@ -178,6 +194,5 @@ export class AppState {
         };
 
         this.setTabs((prev) => [...prev, state]);
-        this.setActiveTab(id);
     }
 }
