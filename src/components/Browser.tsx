@@ -2,7 +2,7 @@ import { createEffect, onCleanup, onMount, createSignal } from "solid-js";
 import { AppState } from "../state";
 import "./Browser.css";
 import { domCodeToKeyCode } from "../keyboard/keycodes";
-import { Cursor } from "cef-client/dist/event_stream";
+import { Cursor } from "cef-client";
 
 function Browser(props: { app: AppState }) {
   let canvasContainer!: HTMLDivElement;
