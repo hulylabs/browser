@@ -74,18 +74,7 @@ function Browser(props: { app: AppState }) {
     if (tabState === undefined) return console.warn("failed to get active tab");
     let connection = props.app.connections.get(tabState.id)!;
 
-<<<<<<< HEAD
-    let ctx = canvas.getContext("2d");
-    if (ctx == null) return console.error("Failed to get canvas context");
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    let connection = props.app.connections.get(tabState.id)!;
-
-    connection.events.on("Frame", (data) => {
-=======
     connection.events.on("Frame", (frame) => {
->>>>>>> d2eecce (use separate renderers for client and server size handling)
       // Calculate FPS
       frameCount++;
       const now = performance.now();
@@ -116,21 +105,6 @@ function Browser(props: { app: AppState }) {
     });
 
     canvas.onmousemove = function (e) {
-<<<<<<< HEAD
-      connection.page.mouseMove(e.offsetX, e.offsetY);
-    };
-
-    canvas.onmousedown = function (e) {
-      connection.page.click(e.offsetX, e.offsetY, e.button, true);
-    };
-
-    canvas.onmouseup = function (e) {
-      connection.page.click(e.offsetX, e.offsetY, e.button, false);
-    };
-
-    canvas.onwheel = function (e) {
-      connection.page.scroll(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
-=======
       const { x, y } = renderer?.convertMousePosition(e.offsetX, e.offsetY) ?? { x: 0, y: 0 };
       connection.page.mouseMove(x, y);
     };
@@ -148,7 +122,6 @@ function Browser(props: { app: AppState }) {
     canvas.onwheel = function (e) {
       const { x, y } = renderer?.convertMousePosition(e.offsetX, e.offsetY) ?? { x: 0, y: 0 };
       connection.page.scroll(x, y, e.deltaX, e.deltaY);
->>>>>>> d2eecce (use separate renderers for client and server size handling)
     };
 
     canvas.onkeydown = function (e) {

@@ -1,4 +1,4 @@
-import { Browser, connect, TabEventStream } from "cef-client";
+import { Browser, connect, LoadState, Tab, TabEventStream } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
 import { Accessor, createSignal } from "solid-js";
