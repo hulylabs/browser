@@ -11,7 +11,7 @@ import { Profiles } from "./components/sidebar/Profiles";
 
 
 function App() {
-  let app = new AppState();
+  let app = new AppState("ws://localhost:8080/browser", true);
   app.addPlugin(new ShortcutPlugin());
 
   return (
@@ -35,5 +35,6 @@ function App() {
     </div>
   )
 }
+
 
 export default App;

@@ -1,6 +1,7 @@
-import { Browser, connect, TabEventStream, LoadState, Tab } from "cef-client";
+import { Browser, connect, TabEventStream } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
+import { Accessor, createSignal } from "solid-js";
 
 type TabId = number;
 
@@ -28,15 +29,37 @@ interface TabState {
 export class AppState {
     private plugins: BrowserPlugin[];
 
+    useServerSize: boolean = false;
+
     browser: Browser | undefined;
     connections: Map<TabId, TabConnection> = new Map();
+
+    serverSize: Accessor<{ width: number; height: number } | undefined>;
+    setServerSize: (size: { width: number; height: number }) => void;
 
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
 
-    constructor() {
+    constructor(address?: string, useServerSize: boolean = false) {
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
         this.plugins = [];
+        this.useServerSize = useServerSize;
+
+        [this.serverSize, this.setServerSize] = createSignal<{ width: number; height: number }>();
+
+        if (address) {
+            connect(address).then(browser => {
+                this.browser = browser;
+                this.fetchTabs();
+                if (useServerSize) {
+                    this.browser.size().then(size => {
+                        this.setServerSize(size);
+                    });
+                }
+            }).catch(error => {
+                console.error("Failed to connect to browser:", error);
+            });
+        }
     }
 
     addPlugin(plugin: BrowserPlugin) {
