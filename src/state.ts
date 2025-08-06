@@ -2,6 +2,7 @@ import { Browser, connect, LoadState, Tab, TabEventStream } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
 import { Accessor, createSignal } from "solid-js";
+import { LoadStatus } from "cef-client/dist/types";
 
 type TabId = number;
 
@@ -17,6 +18,7 @@ interface TabState {
     active: boolean;
     canGoBack: boolean;
     canGoForward: boolean;
+    isLoading: boolean;
 
     goTo: (url: string) => void;
     activate: () => void;
@@ -40,26 +42,12 @@ export class AppState {
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
 
-    constructor(address?: string, useServerSize: boolean = false) {
+    constructor(useServerSize: boolean = false) {
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
         this.plugins = [];
         this.useServerSize = useServerSize;
 
         [this.serverSize, this.setServerSize] = createSignal<{ width: number; height: number }>();
-
-        if (address) {
-            connect(address).then(browser => {
-                this.browser = browser;
-                this.fetchTabs();
-                if (useServerSize) {
-                    this.browser.size().then(size => {
-                        this.setServerSize(size);
-                    });
-                }
-            }).catch(error => {
-                console.error("Failed to connect to browser:", error);
-            });
-        }
     }
 
     addPlugin(plugin: BrowserPlugin) {
@@ -73,6 +61,10 @@ export class AppState {
         let address = json.data.address;
 
         this.browser = await connect(address);
+
+        if (this.useServerSize) {
+            this.setServerSize(await this.browser.size());
+        }
 
         this.setTabs([]);
         await this.fetchTabs();
@@ -192,6 +184,8 @@ export class AppState {
         });
 
         events.on("LoadState", (state: LoadState) => {
+            console.log(`Tab ${id} load state: ${state.status}`);
+            this.setTabs(t => t.id === id, "isLoading", state.status === LoadStatus.Loading);
             this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
             this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
         });
@@ -207,6 +201,7 @@ export class AppState {
             active: false,
             canGoBack: false,
             canGoForward: false,
+            isLoading: true,
 
             goTo: (url: string) => this.goTo(id, url),
             activate: () => this.setActiveTab(tab.id),

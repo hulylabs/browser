@@ -24,5 +24,6 @@ npm install
 Start the Tauri development environment to launch the browser.
 
 ```bash
+export HULY_CEF_MANAGER_HOST=<huly-cef-manager-host>
 npm run tauri dev
 ```

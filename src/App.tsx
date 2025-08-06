@@ -11,7 +11,7 @@ import { Profiles } from "./components/sidebar/Profiles";
 
 
 function App() {
-  let app = new AppState("ws://localhost:8080/browser", true);
+  let app = new AppState(true);
   app.addPlugin(new ShortcutPlugin());
 
   return (
