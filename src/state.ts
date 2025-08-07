@@ -184,7 +184,6 @@ export class AppState {
         });
 
         events.on("LoadState", (state: LoadState) => {
-            console.log(`Tab ${id} load state: ${state.status}`);
             this.setTabs(t => t.id === id, "isLoading", state.status === LoadStatus.Loading);
             this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
             this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
