@@ -69,6 +69,7 @@ fn launch_cef_command(app_handle: tauri::AppHandle) -> u16 {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_cli::init())
         .setup(move |app| {
             app.manage(Mutex::new(BrowserState::default()));
 

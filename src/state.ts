@@ -29,6 +29,7 @@ interface TabState {
 }
 
 export class AppState {
+    readonly managerAddress: string;
     private plugins: BrowserPlugin[];
 
     useServerSize: boolean = false;
@@ -36,16 +37,18 @@ export class AppState {
     browser: Browser | undefined;
     connections: Map<TabId, TabConnection> = new Map();
 
+
     serverSize: Accessor<{ width: number; height: number } | undefined>;
     setServerSize: (size: { width: number; height: number }) => void;
 
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
 
-    constructor(useServerSize: boolean = false) {
+    constructor(managerAddress: string, useServerSize: boolean = false) {
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
         this.plugins = [];
         this.useServerSize = useServerSize;
+        this.managerAddress = managerAddress;
 
         [this.serverSize, this.setServerSize] = createSignal<{ width: number; height: number }>();
     }
@@ -56,7 +59,7 @@ export class AppState {
     }
 
     async setProfile(profile: string) {
-        let response = await fetch(`/api/profiles/${profile}/cef`);
+        let response = await fetch(`${this.managerAddress}/profiles/${profile}/cef`);
         let json = await response.json();
         let address = json.data.address;
 

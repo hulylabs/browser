@@ -9,9 +9,8 @@ import TabControls from "./components/sidebar/TabControls";
 import { ShortcutPlugin } from "./plugins/shortcuts/shortcut";
 import { Profiles } from "./components/sidebar/Profiles";
 
-
-function App() {
-  let app = new AppState(true);
+function App(props: { app: AppState }) {
+  let app = props.app;
   app.addPlugin(new ShortcutPlugin());
 
   return (
