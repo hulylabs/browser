@@ -9,12 +9,11 @@ function Browser(props: { app: AppState }) {
   let canvasContainer!: HTMLDivElement;
   let canvas!: HTMLCanvasElement;
 
-  let renderer: ClientRenderer | ServerRenderer | undefined;
+  let renderer: Renderer;
 
   let resizeObserver!: ResizeObserver;
-  let timeoutId: number = 0;
+  let timeoutId: any = 0;
 
-  // Add FPS tracking state
   const [fps, setFps] = createSignal(0);
   let frameCount = 0;
   let lastTime = performance.now();
@@ -24,28 +23,18 @@ function Browser(props: { app: AppState }) {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    if (props.app.useServerSize === true) {
-      if (props.app.serverSize() === undefined) {
-        console.warn("Server size is not set, waiting for response from server");
-      } else {
-        let size = props.app.serverSize()!;
-        let serverSize = { width: size.width, height: size.height };
-        let clientSize = { width: canvas.width, height: canvas.height };
-        renderer = new ServerRenderer(canvas, serverSize, clientSize, (serverSize, _) => {
-          props.app.resize(serverSize.width, serverSize.height);
-        });
-      }
-    } else {
-      renderer = new ClientRenderer(canvas, rect.width, rect.height, (clientSize) => {
-        props.app.resize(clientSize.width, clientSize.height);
-      });
-    }
+    renderer = new Renderer(canvas);
 
     resizeObserver = new ResizeObserver(() => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         const rect = canvasContainer.getBoundingClientRect();
-        renderer?.resize(rect.width, rect.height);
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+
+        props.app.browser?.resize(rect.width, rect.height);
+
+        renderer.resize(rect.width, rect.height);
       }, 100);
     });
 
@@ -58,24 +47,12 @@ function Browser(props: { app: AppState }) {
   });
 
   createEffect(() => {
-    if (props.app.serverSize() === undefined) return;
-    let size = props.app.serverSize()!;
-    let serverSize = { width: size.width, height: size.height };
-    let clientSize = { width: canvas.width, height: canvas.height };
-    if (renderer === undefined) {
-      renderer = new ServerRenderer(canvas, serverSize, clientSize, (serverSize, _) => {
-        props.app.resize(serverSize.width, serverSize.height);
-      });
-    }
-  });
-
-  createEffect(() => {
+    console.log(`Connecting to tab`);
     let tabState = props.app.getActiveTab();
     if (tabState === undefined) return console.warn("failed to get active tab");
     let connection = props.app.connections.get(tabState.id)!;
 
     connection.events.on("Frame", (frame) => {
-      // Calculate FPS
       frameCount++;
       const now = performance.now();
       const elapsed = now - lastTime;
@@ -84,11 +61,6 @@ function Browser(props: { app: AppState }) {
         setFps(Math.round((frameCount * 1000) / elapsed));
         frameCount = 0;
         lastTime = now;
-      }
-
-      if (renderer === undefined) {
-        console.warn("Renderer is not initialized");
-        return;
       }
 
       renderer.render({ data: frame.data, width: frame.width, height: frame.height });
@@ -167,48 +139,42 @@ interface DrawParams {
   h: number;
 }
 
-class ServerRenderer {
-  private onResize: (serverSize: Size, clientSize: Size) => void;
+class Renderer {
+  private canvas: HTMLCanvasElement;
+  private canvasCtx: CanvasRenderingContext2D;
 
-  private serverSize: Size;
-  private clientSize: Size;
+  private offScreenCanvas: HTMLCanvasElement
+  private offScreenCanvasSize: Size;
+  private offScreenImageData: ImageData;
+  private offScreenCtx: CanvasRenderingContext2D;
 
   private drawParams: DrawParams = { scale: 1, dx: 0, dy: 0, w: 0, h: 0 };
-  private offScreenCanvas: HTMLCanvasElement
-  private offScreenCtx: CanvasRenderingContext2D;
-  private offScreenImageData: ImageData;
 
-  private target: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
 
-  constructor(target: HTMLCanvasElement, serverSize: Size, clientSize: Size, onResize: (serverSize: Size, clientSize: Size) => void) {
-    this.serverSize = serverSize;
-    this.clientSize = clientSize;
+  constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
+    this.canvasCtx = canvas.getContext("2d")!;
 
-    this.drawParams = this.calculateDrawParams(this.serverSize, this.clientSize);
     this.offScreenCanvas = document.createElement("canvas");
-    this.offScreenCanvas.width = serverSize.width;
-    this.offScreenCanvas.height = serverSize.height;
-    this.offScreenImageData = new ImageData(serverSize.width, serverSize.height);
+    this.offScreenCanvas.width = 0;
+    this.offScreenCanvas.height = 0;
+    this.offScreenCanvasSize = { width: 1, height: 1 };
+    this.offScreenImageData = new ImageData(1, 1);
     this.offScreenCtx = this.offScreenCanvas.getContext("2d")!;
-
-    this.target = target;
-    this.ctx = target.getContext("2d")!;
-
-    this.onResize = onResize;
   }
 
   render(frame: { data: Uint8Array; width: number; height: number }) {
-    if (frame.width != this.serverSize.width || frame.height != this.serverSize.height) {
-      return console.error("Frame size does not match server size");
+    if (frame.width !== this.offScreenCanvasSize.width || frame.height !== this.offScreenCanvasSize.height) {
+      this.resizeOffScreenCanvas(frame.width, frame.height);
+      this.drawParams = this.calculateDrawParams({ width: frame.width, height: frame.height }, { width: this.canvas.width, height: this.canvas.height });
     }
 
     this.offScreenImageData.data.set(frame.data);
     this.offScreenCtx.putImageData(this.offScreenImageData, 0, 0);
 
-    this.ctx.fillStyle = "#808080ff";
-    this.ctx.fillRect(0, 0, this.target.width, this.target.height);
-    this.ctx.drawImage(
+    this.canvasCtx.fillStyle = "#808080ff";
+    this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.canvasCtx.drawImage(
       this.offScreenCanvas,
       0, 0, frame.width, frame.height,
       this.drawParams.dx, this.drawParams.dy, this.drawParams.w, this.drawParams.h
@@ -216,13 +182,10 @@ class ServerRenderer {
   }
 
   resize(width: number, height: number) {
-    this.clientSize = { width, height };
-    this.drawParams = this.calculateDrawParams(this.serverSize, this.clientSize);
-
-    this.target.width = width;
-    this.target.height = height;
-
-    this.onResize(this.serverSize, this.clientSize);
+    this.drawParams = this.calculateDrawParams(
+      { width: this.offScreenCanvas.width, height: this.offScreenCanvas.height },
+      { width, height }
+    );
   }
 
   convertMousePosition(x: number, y: number): { x: number; y: number } {
@@ -232,50 +195,17 @@ class ServerRenderer {
     };
   }
 
+  private resizeOffScreenCanvas(width: number, height: number) {
+    this.offScreenCanvas.width = width;
+    this.offScreenCanvas.height = height;
+    this.offScreenImageData = new ImageData(width, height);
+    this.offScreenCtx = this.offScreenCanvas.getContext("2d")!;
+  }
+
   private calculateDrawParams(serverSize: Size, clientSize: Size): DrawParams {
     const scale = Math.min(clientSize.width / serverSize.width, clientSize.height / serverSize.height);
     const dx = (clientSize.width - serverSize.width * scale) / 2;
     const dy = (clientSize.height - serverSize.height * scale) / 2;
     return { scale, dx, dy, w: serverSize.width * scale, h: serverSize.height * scale };
-  }
-}
-
-class ClientRenderer {
-  private onResize: (clientSize: Size) => void;
-
-  private target: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-  private imageData: ImageData;
-
-  constructor(target: HTMLCanvasElement, width: number, height: number, onResize: (clientSize: Size) => void) {
-    this.target = target;
-    this.ctx = target.getContext("2d")!;
-    this.target.width = width;
-    this.target.height = height;
-
-    this.imageData = new ImageData(width, height);
-
-    this.onResize = onResize;
-  }
-
-  render(frame: { data: Uint8Array; width: number; height: number }) {
-    if (this.imageData.width !== frame.width || this.imageData.height !== frame.height) {
-      return console.error("Frame size does not match canvas size");
-    }
-
-    this.imageData.data.set(frame.data);
-    this.ctx.putImageData(this.imageData, 0, 0);
-  }
-
-  resize(width: number, height: number) {
-    this.target.width = width;
-    this.target.height = height;
-    this.imageData = new ImageData(width, height);
-
-    this.onResize({ width, height });
-  }
-
-  convertMousePosition(x: number, y: number): { x: number; y: number } {
-    return { x, y };
   }
 }
