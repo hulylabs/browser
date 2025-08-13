@@ -18,19 +18,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup node
+      - name: Setup NodeJS
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
 
-      - name: install dependencies (ubuntu only)
+      - name: Install dependencies (Linux only)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-          # sudo apt-get install -y libglib2.0-dev libgtk-3-dev libsoup-3.0-dev libwebkit2gtk-4.1-dev
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Install Node Modules
+        run: npm install
+
+      - name: Build Huly Browser
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
