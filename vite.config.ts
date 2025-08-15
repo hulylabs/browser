@@ -3,7 +3,6 @@ import solid from "vite-plugin-solid";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
-const hulyCefManagerHost = process.env.HULY_CEF_MANAGER_HOST || "http://localhost:3000";
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -16,13 +15,6 @@ export default defineConfig(async () => ({
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
-    proxy: {
-      '/api': {
-        target: hulyCefManagerHost,
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      }
-    },
     strictPort: true,
     host: host || false,
     hmr: host
