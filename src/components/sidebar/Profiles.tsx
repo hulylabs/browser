@@ -7,9 +7,8 @@ export function Profiles(props: { app: AppState }) {
     return response.json();
   };
 
-  const [profiles, { refetch }] = createResource(fetchProfiles);
+  const [profiles] = createResource(fetchProfiles);
   const [selected, setSelected] = createSignal<string | undefined>(undefined);
-  const [error, _] = createSignal<string | null>(null);
 
   createEffect(() => {
     if (selected()) {
@@ -24,8 +23,9 @@ export function Profiles(props: { app: AppState }) {
         <p>Loading...</p>
       </Show>
       <Show when={profiles.error}>
-        <p>Error loading profiles: {profiles.error.message}</p>
+        <p>Couldn't load profiles: {profiles.error.message}</p>
       </Show>
+
       <Show when={profiles()}>
         <div>
           <select
@@ -40,9 +40,6 @@ export function Profiles(props: { app: AppState }) {
             </For>
           </select>
         </div>
-        <Show when={error()}>
-          <p style="color: red;">{error()}</p>
-        </Show>
       </Show>
     </div>
   );

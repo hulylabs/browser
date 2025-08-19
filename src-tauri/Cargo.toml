@@ -26,6 +26,4 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 env_logger = "0.11.8"
-
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-cli = "2"
+clap = { version = "4.5.45", features = ["derive", "env"] }

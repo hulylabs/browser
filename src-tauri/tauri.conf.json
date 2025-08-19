@@ -31,18 +31,5 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
-  },
-  "plugins": {
-    "cli": {
-      "description": "",
-      "args": [
-        {
-          "name": "cef-manager",
-          "description": "CEF Manager Address",
-          "takesValue": true,
-          "multiple": false
-        }
-      ]
-    }
   }
 }

@@ -8,7 +8,7 @@ export default function TabControls(props: { app: AppState }) {
     const activeTab = createMemo(() => props.app.getActiveTab());
 
     return (
-        <div class={styles.tabСontrols}>
+        <div class={styles.tabControls}>
             <Show when={activeTab()?.isLoading}>
                 <p>Loading...</p>
             </Show>

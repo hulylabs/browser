@@ -28,14 +28,15 @@ interface TabState {
 }
 
 export class AppState {
-    readonly managerAddress: string;
-    private plugins: BrowserPlugin[];
+    managerAddress: string;
 
     browser: Browser | undefined;
     connections: Map<TabId, TabConnection> = new Map();
-
+    
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
+
+    private plugins: BrowserPlugin[];
 
     constructor(managerAddress: string) {
         this.plugins = [];
@@ -46,6 +47,16 @@ export class AppState {
     addPlugin(plugin: BrowserPlugin) {
         plugin.setup(this);
         this.plugins.push(plugin);
+    }
+
+    async setManagerAddress(managerAddress: string) {
+        this.managerAddress = managerAddress;
+    }
+
+    async setCefAddress(cefAddress: string) {
+        this.browser = await connect(cefAddress);
+        this.setTabs([]);
+        await this.fetchTabs();
     }
 
     async setProfile(profile: string) {

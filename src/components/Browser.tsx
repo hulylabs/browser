@@ -172,7 +172,7 @@ class Renderer {
     this.offScreenImageData.data.set(frame.data);
     this.offScreenCtx.putImageData(this.offScreenImageData, 0, 0);
 
-    this.canvasCtx.fillStyle = "#808080ff";
+    this.canvasCtx.fillStyle = "#ffffff";
     this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.canvasCtx.drawImage(
       this.offScreenCanvas,
