@@ -50,5 +50,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: ./target/release/huly-browser.exe
+          files: ./src-tauri/target/release/huly-browser.exe
           name: 'Huly Browser v${{ steps.tauri-build.outputs.appVersion }}'
+          tag_name: v${{ steps.tauri-build.outputs.appVersion }}
