@@ -1,8 +1,7 @@
-import { Browser, LoadState, Tab, TabEventStream } from "cef-client";
+import { Browser, LoadState, LoadStatus, Tab, TabEventStream } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
 import { ProfileManager } from "./profiles";
-import { LoadStatus } from "cef-client/dist/types";
 
 type TabId = number;
 
