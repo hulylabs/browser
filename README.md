@@ -1,6 +1,6 @@
-# Setting Up Huly CEF with Tauri
+# Running Huly Browser
 
-Follow these steps to configure and launch the Huly CEF browser using Tauri.
+Follow these steps to configure and launch the Huly Browser.
 
 ## 1. Install Node Modules
 

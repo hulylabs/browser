@@ -1,8 +1,8 @@
 import styles from "./TabControls.module.scss";
 
-import { AppState } from "../../state";
-import { Icon, Icons } from "../Icon";
+import { AppState } from "../../state/state";
 import { createMemo, Show } from "solid-js";
+import { ArrowLeftIcon, ArrowRightIcon, RefreshCcw } from "lucide-solid";
 
 export default function TabControls(props: { app: AppState }) {
     const activeTab = createMemo(() => props.app.getActiveTab());
@@ -12,9 +12,9 @@ export default function TabControls(props: { app: AppState }) {
             <Show when={activeTab()?.isLoading}>
                 <p>Loading...</p>
             </Show>
-            <Icon icon={Icons.Back} class={styles.button} classList={{ [styles.active]: activeTab() != undefined && activeTab()?.canGoBack }} onClick={() => activeTab()?.goBack()} />
-            <Icon icon={Icons.Forward} class={styles.button} classList={{ [styles.active]: activeTab() != undefined && activeTab()?.canGoForward }} onClick={() => activeTab()?.goForward()} />
-            <Icon icon={Icons.Reload} class={styles.button} classList={{ [styles.active]: activeTab() != undefined }} onClick={() => activeTab()?.reload()} />
+            <ArrowLeftIcon class={styles.button} classList={{ [styles.active]: activeTab() != undefined && activeTab()?.canGoBack }} onClick={() => activeTab()?.goBack()} />
+            <ArrowRightIcon class={styles.button} classList={{ [styles.active]: activeTab() != undefined && activeTab()?.canGoForward }} onClick={() => activeTab()?.goForward()} />
+            <RefreshCcw class={styles.button} classList={{ [styles.active]: activeTab() != undefined }} onClick={() => activeTab()?.reload()} />
         </div >
     )
 }

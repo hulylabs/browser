@@ -1,19 +1,17 @@
-import { createResource, For, Show, createSignal, createEffect } from "solid-js";
-import { AppState } from "../../state";
+import { createResource, For, Show, createEffect } from "solid-js";
+import { AppState } from "../../state/state";
 
 export function Profiles(props: { app: AppState }) {
   const fetchProfiles = async () => {
-    const response = await fetch(`${props.app.managerAddress}/profiles`);
-    return response.json();
+    let profiles = await props.app.profileManager!.getProfiles();
+    return profiles;
   };
-
   const [profiles] = createResource(fetchProfiles);
-  const [selected, setSelected] = createSignal<string | undefined>(undefined);
 
-  createEffect(() => {
-    if (selected()) {
-      props.app.setProfile(selected()!);
-    }
+  createEffect(async () => {
+    let profile = props.app.profileManager!.selected();
+    let client = await props.app.profileManager!.connect(profile);
+    await props.app.setClient(client);
   });
 
   return (
@@ -29,11 +27,11 @@ export function Profiles(props: { app: AppState }) {
       <Show when={profiles()}>
         <div>
           <select
-            value={selected()}
-            onInput={e => setSelected((e.target as HTMLSelectElement).value)}
+            value={props.app.profileManager?.selected()}
+            onInput={e => props.app.profileManager?.setSelected((e.target as HTMLSelectElement).value)}
           >
             <option value="" disabled selected>Select a profile</option>
-            <For each={profiles().data.profiles}>
+            <For each={profiles()}>
               {(profile) => (
                 <option value={profile}>{profile}</option>
               )}

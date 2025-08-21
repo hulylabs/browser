@@ -1,5 +1,5 @@
 import { createEffect, onCleanup, onMount, createSignal } from "solid-js";
-import { AppState } from "../state";
+import { AppState } from "../state/state";
 import "./Browser.css";
 import { domCodeToKeyCode } from "../keyboard/keycodes";
 import { Cursor } from "cef-client";
@@ -23,6 +23,8 @@ function Browser(props: { app: AppState }) {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
+    props.app.resize(rect.width, rect.height);
+
     renderer = new Renderer(canvas);
 
     resizeObserver = new ResizeObserver(() => {
@@ -32,8 +34,7 @@ function Browser(props: { app: AppState }) {
         canvas.width = rect.width;
         canvas.height = rect.height;
 
-        props.app.browser?.resize(rect.width, rect.height);
-
+        props.app.resize(rect.width, rect.height);
         renderer.resize(rect.width, rect.height);
       }, 100);
     });

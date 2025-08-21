@@ -1,8 +1,8 @@
 import styles from "./Tab.module.scss";
 
-import { TabState } from "../../state";
-import { Icon, Icons } from "../Icon";
+import { TabState } from "../../state/state";
 import { Show } from "solid-js";
+import { XIcon } from "lucide-solid";
 
 export default function Tab(props: { tab: TabState }) {
     let activate = (event: MouseEvent) => {
@@ -27,7 +27,7 @@ export default function Tab(props: { tab: TabState }) {
 
             </div>
 
-            <Icon icon={Icons.X} class={styles.close} onClick={close} />
+            <XIcon class={styles.close} onClick={close} />
         </div >
     )
 }

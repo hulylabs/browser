@@ -1,6 +1,7 @@
-import { Browser, connect, LoadState, Tab, TabEventStream } from "cef-client";
+import { Browser, LoadState, Tab, TabEventStream } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
+import { ProfileManager } from "./profiles";
 import { LoadStatus } from "cef-client/dist/types";
 
 type TabId = number;
@@ -10,7 +11,7 @@ interface TabConnection {
     events: TabEventStream;
 }
 
-interface TabState {
+export interface TabState {
     id: TabId;
     title: string;
     favicon: string;
@@ -27,20 +28,22 @@ interface TabState {
     reload: () => void;
 }
 
+
 export class AppState {
-    managerAddress: string;
-
-    browser: Browser | undefined;
-    connections: Map<TabId, TabConnection> = new Map();
-    
-    tabs: TabState[];
-    setTabs: SetStoreFunction<TabState[]>;
-
+    private client: Browser;
     private plugins: BrowserPlugin[];
 
-    constructor(managerAddress: string) {
+    profileManager: ProfileManager | undefined;
+
+    tabs: TabState[];
+    setTabs: SetStoreFunction<TabState[]>;
+    connections: Map<TabId, TabConnection> = new Map();
+
+    constructor(client: Browser, profileManager?: ProfileManager) {
+        this.client = client;
         this.plugins = [];
-        this.managerAddress = managerAddress;
+
+        this.profileManager = profileManager;
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
     }
 
@@ -49,57 +52,20 @@ export class AppState {
         this.plugins.push(plugin);
     }
 
-    async setManagerAddress(managerAddress: string) {
-        this.managerAddress = managerAddress;
-    }
-
-    async setCefAddress(cefAddress: string) {
-        this.browser = await connect(cefAddress);
+    async setClient(client: Browser) {
+        this.client.closeConnection();
         this.setTabs([]);
-        await this.fetchTabs();
-    }
-
-    async setProfile(profile: string) {
-        let response = await fetch(`${this.managerAddress}/profiles/${profile}/cef`);
-        let json = await response.json();
-        let address = json.data.address;
-
-        this.browser = await connect(address);
-
-        this.setTabs([]);
-        await this.fetchTabs();
-
-        setInterval(async () => {
-            if (!this.browser) {
-                console.error("Browser is not connected");
-                return;
-            }
-
-            let tabs = await this.browser?.tabs();
-            for (let tab of tabs) {
-                if (!this.tabs.some(t => t.id === tab.id)) {
-                    this.addTab(tab);
-                }
-            }
-        }, 5000);
-
-    }
-
-    async fetchTabs() {
-        if (!this.browser) {
-            console.error("Browser is not connected");
-            return;
+        for (let connection of this.connections.values()) {
+            connection.events.closeConnection();
         }
+        this.connections.clear();
 
-        let tabs = await this.browser?.tabs();
-        for (let tab of tabs) {
-            this.addTab(tab);
-        }
-
+        this.client = client;
+        setInterval(async () => await this.fetchTabs(), 5000);
     }
 
     async newTab(url?: string) {
-        let tab = await this.browser?.openTab({ url })!;
+        let tab = await this.client.openTab({ url })!;
         this.addTab(tab);
         this.setActiveTab(tab.id);
     }
@@ -114,25 +80,16 @@ export class AppState {
     }
 
     setActiveTab(tabId: TabId) {
-        let tab = this.tabs.find((tab) => tab.id === tabId);
-        if (!tab) {
-            console.error(`Tab with id ${tabId} not found`);
-            return;
+        let activeTab = this.getActiveTab();
+        if (activeTab) {
+            this.setActive(activeTab.id, false);
         }
 
-        let indices = [this.tabs.findIndex((tab) => tab.id === tabId)];
-        let activeTabIndex = this.tabs.findIndex((tab) => tab.active);
-        if (activeTabIndex !== -1) {
-            indices.push(activeTabIndex);
-            this.connections.get(tabId)?.page.stopVideo();
-        }
-
-        this.setTabs(indices, "active", (active) => !active);
-        this.connections.get(tabId)?.page.startVideo();
+        this.setActive(tabId, true);
     }
 
     resize(width: number, height: number) {
-        this.browser?.resize(width, height);
+        this.client.resize(width, height);
     }
 
     goTo(tabId: TabId, url: string) {
@@ -167,6 +124,27 @@ export class AppState {
         if (tabToClose.active) {
             let newActiveTabIndex = index - 1 < 0 ? 0 : index - 1;
             this.setActiveTab(this.tabs[newActiveTabIndex].id);
+        }
+    }
+
+    private setActive(id: TabId, active: boolean) {
+        let tab = this.tabs.find(t => t.id === id);
+        if (!tab) {
+            console.error(`[setActive] tab with id ${id} not found`);
+            return;
+        }
+
+        this.setTabs(t => t.id === id, "active", active);
+        let connection = this.connections.get(id)!;
+        active ? connection.page.startVideo() : connection.page.stopVideo();
+    }
+
+    private async fetchTabs() {
+        let tabs = await this.client.tabs();
+        for (let tab of tabs) {
+            if (!this.tabs.some(t => t.id === tab.id)) {
+                this.addTab(tab);
+            }
         }
     }
 

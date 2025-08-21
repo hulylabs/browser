@@ -1,5 +1,5 @@
 import { createMemo, createSignal } from "solid-js";
-import { AppState } from "../../state";
+import { AppState } from "../../state/state";
 import "./Input.css";
 
 export default function Input(props: { app: AppState }) {
