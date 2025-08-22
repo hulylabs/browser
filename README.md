@@ -17,3 +17,13 @@ Start the Tauri development environment to launch the browser.
 ```bash
 npm run tauri dev
 ```
+
+## Huly Browser Arguments
+
+| Argument | Environment Variable | Default Value | Description |
+|:--------:|:--------------------:|:-------------:|:-----------:|
+| `--cef` | `CEF` | `ws://localhost:8080/browser` | Address to a standalone Huly CEF instance. Used when profiles are not enabled. |
+| `--profiles-enabled` | `PROFILES_ENABLED` | `false` | Enables browser profiles functionality |
+| `--cef-manager` | `CEF_MANAGER` | `http://localhost:3000` | Address to Huly CEF Manager. Used when profiles are enabled. |
+
+

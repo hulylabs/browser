@@ -170,6 +170,10 @@ export class AppState {
             this.setTabs(t => t.id === id, "title", title);
         });
 
+        events.on("NewTab", (url: string) => {
+            this.newTab(url);
+        });
+
         let state: TabState = {
             id: id,
             title: "New Tab",

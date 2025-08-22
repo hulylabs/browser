@@ -113,6 +113,15 @@ function Browser(props: { app: AppState }) {
         connection.page.key(keyCode, 0, false, e.shiftKey, e.ctrlKey);
       }
     };
+
+    canvas.onfocus = function () {
+      connection.page.focus(true);
+    };
+
+    canvas.onblur = function () {
+      connection.page.focus(false);
+    };
+
   });
 
   return (

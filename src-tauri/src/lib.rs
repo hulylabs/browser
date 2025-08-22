@@ -6,7 +6,7 @@ use tauri::Manager;
 
 #[derive(Parser, Serialize)]
 struct Arguments {
-    #[clap(long, env = "PROFILES_ENABLED", default_value = "true")]
+    #[clap(long, env = "PROFILES_ENABLED", default_value = "false")]
     profiles_enabled: bool,
     #[clap(long, env = "CEF_MANAGER", default_value = "http://localhost:3000")]
     cef_manager: String,
