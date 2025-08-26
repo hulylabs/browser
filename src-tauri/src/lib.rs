@@ -1,10 +1,15 @@
-use std::sync::Mutex;
+use std::{
+    process::Child,
+    sync::{Arc, Mutex},
+};
 
 use clap::Parser;
 use serde::Serialize;
 use tauri::Manager;
 
-#[derive(Parser, Serialize)]
+mod cef;
+
+#[derive(Parser, Serialize, Clone)]
 struct Arguments {
     #[clap(long, env = "PROFILES_ENABLED", default_value = "false")]
     profiles_enabled: bool,
@@ -14,39 +19,41 @@ struct Arguments {
     cef: String,
 }
 
-#[derive(Default)]
 struct BrowserState {
-    profiles_enabled: bool,
-    cef_manager: String,
-    cef: String,
+    args: Arguments,
+    cef_process: Option<Child>,
 }
 
 #[tauri::command]
 fn get_args(app_handle: tauri::AppHandle) -> Arguments {
-    let state = app_handle.state::<Mutex<BrowserState>>();
+    let state = app_handle.state::<Arc<Mutex<BrowserState>>>();
     let state = state.lock().expect("Failed to lock BrowserState");
-    return Arguments {
-        profiles_enabled: state.profiles_enabled,
-        cef_manager: state.cef_manager.clone(),
-        cef: state.cef.clone(),
-    };
+    return state.args.clone();
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let args = Arguments::parse();
 
+    let state = Arc::new(Mutex::new(BrowserState {
+        args,
+        cef_process: None,
+    }));
+    let clone = state.clone();
     tauri::Builder::default()
         .setup(move |app| {
-            app.manage(Mutex::new(BrowserState {
-                profiles_enabled: args.profiles_enabled,
-                cef_manager: args.cef_manager,
-                cef: args.cef,
-            }));
-
+            app.manage(state);
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler!(get_args))
+        .on_window_event(move |_, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                let cef_process = clone.lock().unwrap().cef_process.take();
+                if let Some(mut cef_process) = cef_process {
+                    let _ = cef_process.kill();
+                }
+            }
+        })
+        .invoke_handler(tauri::generate_handler!(get_args, cef::launch_cef))
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

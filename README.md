@@ -22,7 +22,7 @@ npm run tauri dev
 
 | Argument | Environment Variable | Default Value | Description |
 |:--------:|:--------------------:|:-------------:|:-----------:|
-| `--cef` | `CEF` | `ws://localhost:8080/browser` | Address to a standalone Huly CEF instance. Used when profiles are not enabled. |
+| `--cef` | `CEF` | `` | Address to a standalone Huly CEF instance. Optional, used when profiles are disabled for debugging  |
 | `--profiles-enabled` | `PROFILES_ENABLED` | `false` | Enables browser profiles functionality |
 | `--cef-manager` | `CEF_MANAGER` | `http://localhost:3000` | Address to Huly CEF Manager. Used when profiles are enabled. |
 

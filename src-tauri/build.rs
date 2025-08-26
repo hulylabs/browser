@@ -1,7 +1,3 @@
-use anyhow::Result;
-
-fn main() -> Result<()> {
+fn main() {
     tauri_build::build();
-
-    Ok(())
 }
