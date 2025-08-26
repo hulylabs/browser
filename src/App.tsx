@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, onMount, Show } from "solid-js";
+import { createSignal, For, onMount, Show } from "solid-js";
 import { AppState } from "./state/state";
 import Browser from "./components/Browser";
 import Input from "./components/sidebar/Input";
@@ -29,7 +29,7 @@ async function connectToManager(managerAddress: string): Promise<AppState> {
   let profileManager = new ProfileManager(managerAddress);
   let profiles = await profileManager.getProfiles();
   if (profiles.length === 0) {
-    return Promise.reject('No profiles found');
+    throw new Error('No profiles found');
   }
 
   profileManager.setSelected(profiles[0]);
@@ -41,41 +41,42 @@ async function connectToManager(managerAddress: string): Promise<AppState> {
 interface Event {
   message: string;
   type: 'info' | 'error';
-  title: string;
 }
 
 function App() {
-  let [event, setEvent] = createSignal<Event>({ message: "", type: "info", title: "" });
+  let [event, setEvent] = createSignal<Event>({ message: "", type: "info" });
   let [app, setApp] = createSignal<AppState | null>(null);
 
-  let channel = new Channel<LaunchEvent>();
-  channel.onmessage = (event) => {
-    setEvent({ message: `${event} Huly CEF...`, type: "info", title: "Information" });
-  }
-  invoke("get_args").then((result) => {
-    let args = result as Arguments;
+  onMount(async () => {
+    const channel = new Channel<LaunchEvent>();
+    channel.onmessage = (event) => {
+      setEvent({ message: `${event} Huly CEF...`, type: "info", title: "Information" });
+    };
 
-    if (args.profiles_enabled) {
-      setEvent({ message: "Connecting to Huly CEF Manager...", type: "info", title: "Information" });
-      connectToManager(args.cef_manager).then((app) => setApp(app)).catch((error) => {
-        setEvent({ message: "Failed to connect to Huly CEF Manager: " + error, type: "error", title: "Application Error" });
-      });
-    } else {
-      if (args.cef !== "") {
-        setEvent({ message: `Connecting to Huly CEF on address ${args.cef}`, type: "info", title: "Information" });
-        connect(args.cef).then((browser) => setApp(new AppState(browser))).catch((error) => {
-          setEvent({ message: "Failed to connect to Huly CEF: " + error, type: "error", title: "Application Error" });
-        });
+    try {
+      const args = await invoke("get_args") as Arguments;
+
+      let appState: AppState;
+      if (args.profiles_enabled) {
+        setEvent({ message: `Connecting to Huly CEF Manager on address ${args.cef_manager}`, type: "info" });
+        appState = await connectToManager(args.cef_manager);
+      } else if (args.cef !== "") {
+        setEvent({ message: `Connecting to Huly CEF on address ${args.cef}`, type: "info" });
+        const browser = await connect(args.cef);
+        appState = new AppState(browser);
       } else {
-        launchCEF(channel).then((app) => setApp(app)).catch((error) => {
-          setEvent({ message: "Failed to launch Huly CEF: " + error, type: "error", title: "Application Error" });
-        });
+        appState = await launchCEF(channel);
       }
+      setApp(appState);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setEvent({ message: `Failed to initialize: ${errorMessage}`, type: "error" });
     }
-  })
+  });
+
 
   return (
-    <Show when={app()} fallback={<Notification message={event().message} type={event().type} title={event().title} />}>
+    <Show when={app()} fallback={<Notification message={event().message} type={event().type} />}>
       {(app) =>
         <div class="app" >
           <div class="sidebar">

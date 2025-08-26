@@ -7,7 +7,7 @@ use std::{
 };
 
 use serde::Serialize;
-use tauri::{ipc::Channel, Manager};
+use tauri::{Manager, ipc::Channel};
 use tungstenite::connect;
 use zip::ZipArchive;
 

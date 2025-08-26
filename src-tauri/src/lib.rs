@@ -15,7 +15,7 @@ struct Arguments {
     profiles_enabled: bool,
     #[clap(long, env = "CEF_MANAGER", default_value = "http://localhost:3000")]
     cef_manager: String,
-    #[clap(long, env = "CEF", default_value = "ws://localhost:8080/browser")]
+    #[clap(long, env = "CEF", default_value = "")]
     cef: String,
 }
 

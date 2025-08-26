@@ -16,7 +16,7 @@
     "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-cli": "^2.4.0",
     "@tauri-apps/plugin-opener": "^2",
-    "cef-client": "^1.1.9",
+    "cef-client": "^1.1.10",
     "lucide-solid": "^0.540.0",
     "solid-js": "^1.9.3"
   },
