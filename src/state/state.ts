@@ -2,6 +2,7 @@ import { Browser, LoadState, LoadStatus, Tab, TabEventStream } from "cef-client"
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
 import { ProfileManager } from "./profiles";
+import { isURL, isFQDN } from "validator";
 
 type TabId = number;
 
@@ -63,7 +64,11 @@ export class AppState {
         setInterval(async () => await this.fetchTabs(), 5000);
     }
 
-    async newTab(url?: string) {
+    async newTab(searchString?: string) {
+        let url = "";
+        if (searchString) {
+            url = this.processSearchString(searchString);
+        }
         let tab = await this.client.openTab({ url })!;
         this.addTab(tab);
         this.setActiveTab(tab.id);
@@ -91,15 +96,16 @@ export class AppState {
         this.client.resize(width, height);
     }
 
-    goTo(tabId: TabId, url: string) {
+    navigate(tabId: TabId, searchString: string) {
+        let url = this.processSearchString(searchString);
         this.connections.get(tabId)?.page.navigate(url);
     }
 
-    goBack(tabId: TabId) {
+    back(tabId: TabId) {
         this.connections.get(tabId)?.page.back();
     }
 
-    goForward(tabId: TabId) {
+    forward(tabId: TabId) {
         this.connections.get(tabId)?.page.forward();
     }
 
@@ -109,18 +115,18 @@ export class AppState {
 
     closeTab(tabId: TabId) {
         let index = this.tabs.findIndex((tab) => tab.id === tabId);
-        let tabToClose = this.tabs[index];
-        let onlyTab = this.tabs.length == 1;
+        let tab = this.tabs[index];
 
         this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
         this.connections.get(tabId)?.page.close();
-        // this.connections.get(tabId)?.events.close();
+        this.connections.get(tabId)?.events.closeConnection();
         this.connections.delete(tabId);
-        if (onlyTab) {
+
+        if (this.tabs.length === 0) {
             return;
         }
 
-        if (tabToClose.active) {
+        if (tab.active) {
             let newActiveTabIndex = index - 1 < 0 ? 0 : index - 1;
             this.setActiveTab(this.tabs[newActiveTabIndex].id);
         }
@@ -181,16 +187,27 @@ export class AppState {
             active: false,
             canGoBack: false,
             canGoForward: false,
-            isLoading: true,
+            isLoading: false,
 
-            goTo: (url: string) => this.goTo(id, url),
+            goTo: (url: string) => this.navigate(id, url),
             activate: () => this.setActiveTab(tab.id),
             close: () => this.closeTab(tab.id),
-            goBack: () => this.goBack(id),
-            goForward: () => this.goForward(id),
+            goBack: () => this.back(id),
+            goForward: () => this.forward(id),
             reload: () => this.reload(id),
         };
 
         this.setTabs((prev) => [...prev, state]);
+    }
+
+    private processSearchString(searchString: string) {
+        let is1 = isFQDN(searchString);
+        let is2 = isURL(searchString, { protocols: ["http", "https"] });
+        if (is1 || is2) {
+            console.log("It's a domain: ", is1);
+            console.log("It's a URL: ", is2);
+            return searchString;
+        }
+        return `https://www.google.com/search?q=${searchString}`;
     }
 }

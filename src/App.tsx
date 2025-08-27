@@ -74,7 +74,6 @@ function App() {
     }
   });
 
-
   return (
     <Show when={app()} fallback={<Notification message={event().message} type={event().type} />}>
       {(app) =>
