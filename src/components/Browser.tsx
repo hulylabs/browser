@@ -17,7 +17,7 @@ function Browser(props: { app: AppState }) {
   const handleResize = () => {
     const rect = canvasContainer.getBoundingClientRect();
     const [width, height] = [rect.width, rect.height];
-  
+
     renderer.resize(width, height);
     props.app.resize(width, height);
   }
@@ -54,7 +54,7 @@ function Browser(props: { app: AppState }) {
       renderer.render(frame);
     });
 
-    connection.events.on("Cursor", (cursor) => InputHandler.setCursor(canvas, cursor) );
+    connection.events.on("Cursor", (cursor) => InputHandler.setCursor(canvas, cursor));
 
     InputHandler.setupEventListeners(canvas, connection);
 
@@ -121,7 +121,7 @@ class InputHandler {
   };
 
   static setupEventListeners(
-    canvas: HTMLCanvasElement, 
+    canvas: HTMLCanvasElement,
     connection: TabConnection
   ) {
     canvas.onmousemove = (e) => this.handleMouseMove(e, connection);
