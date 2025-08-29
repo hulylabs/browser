@@ -10,6 +10,8 @@ body,
 #root {
   height: 100vh;
   overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .app {
@@ -31,15 +33,15 @@ body,
 }
 
 .new-tab-button {
-    padding: 10px 10px;
-    border-radius: 5px;
+  padding: 10px 10px;
+  border-radius: 5px;
 
-    color: #666;
+  color: #666;
 }
 
 .new-tab-button:hover {
-    background-color: rgba(100, 100, 100, 0.1);
-    cursor: pointer;
+  background-color: rgba(100, 100, 100, 0.1);
+  cursor: pointer;
 }
 
 .tabs {
