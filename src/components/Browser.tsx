@@ -105,8 +105,8 @@ class Renderer {
     this.canvas.width = width * this.dpr;
     this.canvas.height = height * this.dpr;
 
-    this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
+    this.canvas.style.width = `${width}px`;
+    this.canvas.style.height = `${height}px`;
 
     this.imageData = new ImageData(width * this.dpr, height * this.dpr);
   }
@@ -120,10 +120,7 @@ class InputHandler {
     [Cursor.Crosshair]: "crosshair",
   };
 
-  static setupEventListeners(
-    canvas: HTMLCanvasElement,
-    connection: TabConnection
-  ) {
+  static setupEventListeners(canvas: HTMLCanvasElement, connection: TabConnection) {
     canvas.onmousemove = (e) => this.handleMouseMove(e, connection);
     canvas.onmousedown = (e) => this.handleMouseDown(e, connection);
     canvas.onmouseup = (e) => this.handleMouseUp(e, connection);
@@ -136,23 +133,23 @@ class InputHandler {
     canvas.onblur = () => connection.page.focus(false);
   }
 
-  private static handleMouseMove(e: MouseEvent, connection: any) {
+  private static handleMouseMove(e: MouseEvent, connection: TabConnection) {
     connection.page.mouseMove(e.offsetX, e.offsetY);
   }
 
-  private static handleMouseDown(e: MouseEvent, connection: any) {
+  private static handleMouseDown(e: MouseEvent, connection: TabConnection) {
     connection.page.click(e.offsetX, e.offsetY, e.button, true);
   }
 
-  private static handleMouseUp(e: MouseEvent, connection: any) {
+  private static handleMouseUp(e: MouseEvent, connection: TabConnection) {
     connection.page.click(e.offsetX, e.offsetY, e.button, false);
   }
 
-  private static handleWheel(e: WheelEvent, connection: any) {
+  private static handleWheel(e: WheelEvent, connection: TabConnection) {
     connection.page.scroll(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
   }
 
-  private static handleKeyDown(e: KeyboardEvent, connection: any) {
+  private static handleKeyDown(e: KeyboardEvent, connection: TabConnection) {
     const keyCode = domCodeToKeyCode(e.code);
     if (keyCode !== undefined) {
       connection.page.key(keyCode, 0, true, e.shiftKey, e.ctrlKey);
@@ -162,7 +159,7 @@ class InputHandler {
     }
   }
 
-  private static handleKeyUp(e: KeyboardEvent, connection: any) {
+  private static handleKeyUp(e: KeyboardEvent, connection: TabConnection) {
     const keyCode = domCodeToKeyCode(e.code);
     if (keyCode !== undefined) {
       connection.page.key(keyCode, 0, false, e.shiftKey, e.ctrlKey);
