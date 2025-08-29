@@ -6,7 +6,7 @@ import { isURL, isFQDN } from "validator";
 
 type TabId = number;
 
-interface TabConnection {
+export interface TabConnection {
     page: Tab;
     events: TabEventStream;
 }
