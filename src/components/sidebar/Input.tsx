@@ -34,6 +34,7 @@ export default function Input(props: { app: AppState }) {
         <div class={styles.wrapper}>
             <input
                 class={styles.input}
+                spellcheck="false"
                 type="text"
                 placeholder="Search..."
                 onInput={(e) => setInput(e.target.value)}
