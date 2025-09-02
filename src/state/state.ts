@@ -14,6 +14,7 @@ export interface TabConnection {
 export interface TabState {
     id: TabId;
     title: string;
+    url: string;
     favicon: string;
     active: boolean;
     canGoBack: boolean;
@@ -92,6 +93,25 @@ export class AppState {
         this.setActive(tabId, true);
     }
 
+    closeTab(tabId: TabId) {
+        let index = this.tabs.findIndex((tab) => tab.id === tabId);
+        let tab = this.tabs[index];
+
+        this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
+        this.connections.get(tabId)?.page.close();
+        this.connections.get(tabId)?.events.closeConnection();
+        this.connections.delete(tabId);
+
+        if (this.tabs.length === 0) {
+            return;
+        }
+
+        if (tab.active) {
+            let newActiveTabIndex = index - 1 < 0 ? 0 : index - 1;
+            this.setActiveTab(this.tabs[newActiveTabIndex].id);
+        }
+    }
+
     resize(width: number, height: number) {
         this.client.resize(width, height);
     }
@@ -113,24 +133,6 @@ export class AppState {
         this.connections.get(tabId)?.page.reload();
     }
 
-    closeTab(tabId: TabId) {
-        let index = this.tabs.findIndex((tab) => tab.id === tabId);
-        let tab = this.tabs[index];
-
-        this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
-        this.connections.get(tabId)?.page.close();
-        this.connections.get(tabId)?.events.closeConnection();
-        this.connections.delete(tabId);
-
-        if (this.tabs.length === 0) {
-            return;
-        }
-
-        if (tab.active) {
-            let newActiveTabIndex = index - 1 < 0 ? 0 : index - 1;
-            this.setActiveTab(this.tabs[newActiveTabIndex].id);
-        }
-    }
 
     private setActive(id: TabId, active: boolean) {
         let tab = this.tabs.find(t => t.id === id);
@@ -162,27 +164,20 @@ export class AppState {
             events: events
         });
 
-        events.on("Favicon", (url: string) => {
-            this.setTabs(t => t.id === id, "favicon", url);
-        });
-
+        events.on("Title", (title: string) => this.setTabs(t => t.id === id, "title", title));
+        events.on("Url", (url: string) => this.setTabs(t => t.id === id, "url", url));
+        events.on("Favicon", (url: string) => this.setTabs(t => t.id === id, "favicon", url));
+        events.on("NewTab", (url: string) => this.newTab(url));
         events.on("LoadState", (state: LoadState) => {
             this.setTabs(t => t.id === id, "isLoading", state.status === LoadStatus.Loading);
             this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
             this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
         });
 
-        events.on("Title", (title: string) => {
-            this.setTabs(t => t.id === id, "title", title);
-        });
-
-        events.on("NewTab", (url: string) => {
-            this.newTab(url);
-        });
-
         let state: TabState = {
             id: id,
             title: "New Tab",
+            url: "",
             favicon: "",
             active: false,
             canGoBack: false,

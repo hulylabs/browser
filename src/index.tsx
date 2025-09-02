@@ -9,6 +9,6 @@ if (!import.meta.env.DEV) {
     }
 }
 
-setConfig({ logging: false })
+setConfig({ logging: false, defaultUrl: "data:text/html,<html><head><title>New Tab</title></head><body></body></html>" })
 
 render(() => <App />, document.getElementById("root") as HTMLElement);

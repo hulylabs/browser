@@ -43,12 +43,11 @@ function Browser(props: { app: AppState }) {
   createEffect(() => {
     const tabState = props.app.getActiveTab();
     if (tabState === undefined) {
-      console.warn("failed to get active tab");
+      renderer.clear();
       return;
     }
 
     const connection = props.app.connections.get(tabState.id)!;
-
     connection.events.on("Frame", (frame) => {
       fpsTracker.update();
       renderer.render(frame);
