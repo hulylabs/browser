@@ -10,6 +10,7 @@ import { Profiles } from "./components/sidebar/Profiles";
 import { connect } from "cef-client";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { ProfileManager } from "./state/profiles";
+import { ResizablePane } from "./components/ResizablePane";
 
 interface Arguments {
   profiles_enabled: boolean;
@@ -77,23 +78,26 @@ function App() {
   return (
     <Show when={app()} fallback={<Notification message={event().message} type={event().type} />}>
       {(app) =>
-        <div class="app" >
-          <div class="sidebar">
-            <TabControls app={app()} />
-            <Input app={app()} />
-            <Show when={app().profileManager}>
-              <Profiles app={app()} />
-            </Show>
-            <div onClick={() => app().newTab()} class="new-tab-button">
-              <p> + New Tab</p>
-            </div>
-            <div class="tabs">
-              <For each={app().tabs}>{(tab) => (
-                <Tab tab={tab} />
-              )}
-              </For>
-            </div>
-          </div>
+        <div class="app">
+          <ResizablePane width={300} minWidth={190} maxWidth={400} class="sidebar">
+            <ResizablePane.Content class="sidebar-content">
+              <TabControls app={app()} />
+              <Input app={app()} />
+              <Show when={app().profileManager}>
+                <Profiles app={app()} />
+              </Show>
+              <div onClick={() => app().newTab()} class="new-tab-button">
+                <p> + New Tab</p>
+              </div>
+              <div class="tabs">
+                <For each={app().tabs}>{(tab) => (
+                  <Tab tab={tab} />
+                )}
+                </For>
+              </div>
+            </ResizablePane.Content>
+            <ResizablePane.Handle />
+          </ResizablePane>
 
           <div class="browser">
             <Browser app={app()} />
