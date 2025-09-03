@@ -151,17 +151,19 @@ class InputHandler {
   private static handleKeyDown(e: KeyboardEvent, connection: TabConnection) {
     const keyCode = domCodeToKeyCode(e.code);
     if (keyCode !== undefined) {
-      connection.page.key(keyCode, 0, true, e.shiftKey, e.ctrlKey);
+      let unicode = 0;
       if (e.key.length === 1) {
-        connection.page.char(e.key.charCodeAt(0));
+        unicode = e.key.charCodeAt(0);
       }
+      connection.page.key(keyCode, unicode, true, e.ctrlKey, e.shiftKey);
+
     }
   }
 
   private static handleKeyUp(e: KeyboardEvent, connection: TabConnection) {
     const keyCode = domCodeToKeyCode(e.code);
     if (keyCode !== undefined) {
-      connection.page.key(keyCode, 0, false, e.shiftKey, e.ctrlKey);
+      connection.page.key(keyCode, 0, false, e.ctrlKey, e.shiftKey);
     }
   }
 
