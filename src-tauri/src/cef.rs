@@ -46,10 +46,19 @@ pub async fn launch_cef(
     ensure_cef_installed(&cef_dir, &cef_exe, &channel).await?;
 
     _ = channel.send(LaunchEvent::Launching);
+
     let port = find_available_port().map_err(|e| format!("couldn't find available port: {e}"))?;
-    let cef = std::process::Command::new(cef_exe)
+    let mut command = std::process::Command::new(cef_exe);
+    command
         .args(["--port", &port.to_string()])
-        .args(["--cache-path", cef_cache.to_str().unwrap()])
+        .args(["--cache-path", cef_cache.to_str().unwrap()]);
+
+    #[cfg(target_os = "windows")]
+    {
+        command.creation_flags(0x08000000);
+    }
+
+    let cef = command
         .spawn()
         .map_err(|e| format!("failed to launch CEF: {e}"))?;
 
