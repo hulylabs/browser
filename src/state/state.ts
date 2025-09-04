@@ -27,6 +27,7 @@ export interface TabState {
     goBack: () => void;
     goForward: () => void;
     reload: () => void;
+    selectAll: () => void;
 }
 
 
@@ -133,6 +134,9 @@ export class AppState {
         this.connections.get(tabId)?.page.reload();
     }
 
+    selectAll(tabId: TabId) {
+        this.connections.get(tabId)?.page.selectAll();
+    }
 
     private setActive(id: TabId, active: boolean) {
         let tab = this.tabs.find(t => t.id === id);
@@ -190,6 +194,7 @@ export class AppState {
             goBack: () => this.back(id),
             goForward: () => this.forward(id),
             reload: () => this.reload(id),
+            selectAll: () => this.selectAll(id),
         };
 
         this.setTabs((prev) => [...prev, state]);

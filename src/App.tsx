@@ -1,16 +1,13 @@
-import { createSignal, For, onMount, Show } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import { AppState } from "./state/state";
 import Browser from "./components/Browser";
-import Input from "./components/sidebar/Input";
-import Tab from "./components/sidebar/Tab";
 import Notification from "./components/Notification";
 import "./App.css";
-import TabControls from "./components/sidebar/TabControls";
-import { Profiles } from "./components/sidebar/Profiles";
 import { connect } from "cef-client";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { ProfileManager } from "./state/profiles";
-import { ResizablePane } from "./components/ResizablePane";
+import { ShortcutPlugin } from "./state/plugins/shortcut";
+import Sidebar from "./components/sidebar";
 
 interface Arguments {
   profiles_enabled: boolean;
@@ -68,6 +65,9 @@ function App() {
       } else {
         appState = await launchCEF(channel);
       }
+
+      appState.addPlugin(new ShortcutPlugin());
+
       setApp(appState);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -79,26 +79,7 @@ function App() {
     <Show when={app()} fallback={<Notification message={event().message} type={event().type} />}>
       {(app) =>
         <div class="app">
-          <ResizablePane width={300} minWidth={190} maxWidth={400} class="sidebar">
-            <ResizablePane.Content class="sidebar-content">
-              <TabControls app={app()} />
-              <Input app={app()} />
-              <Show when={app().profileManager}>
-                <Profiles app={app()} />
-              </Show>
-              <div onClick={() => app().newTab()} class="new-tab-button">
-                <p> + New Tab</p>
-              </div>
-              <div class="tabs">
-                <For each={app().tabs}>{(tab) => (
-                  <Tab tab={tab} />
-                )}
-                </For>
-              </div>
-            </ResizablePane.Content>
-            <ResizablePane.Handle />
-          </ResizablePane>
-
+          <Sidebar app={app()} />
           <div class="browser">
             <Browser app={app()} />
           </div>

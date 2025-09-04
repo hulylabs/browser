@@ -1,5 +1,5 @@
-import { AppState } from "../../state";
-import { BrowserPlugin } from "../plugin";
+import { AppState } from "../state";
+import { BrowserPlugin } from "./plugin";
 
 
 type Shortcut = string;
@@ -29,6 +29,7 @@ export class ShortcutPlugin implements BrowserPlugin {
 
         this.shortcuts.set("ctrl+t", "newTab");
         this.shortcuts.set("ctrl+w", "closeTab");
+        this.shortcuts.set("ctrl+a", "selectAll");
 
         this.actions.set("newTab", () => {
             app.newTab();
@@ -38,6 +39,14 @@ export class ShortcutPlugin implements BrowserPlugin {
             let activeTab = app.getActiveTab();
             if (activeTab) {
                 activeTab.close();
+            }
+        });
+
+        this.actions.set("selectAll", () => {
+            let activeTab = app.getActiveTab();
+            if (activeTab) {
+                console.log("Selecting all");
+                activeTab.selectAll();
             }
         });
 
