@@ -27,7 +27,13 @@ export interface TabState {
     goBack: () => void;
     goForward: () => void;
     reload: () => void;
+
     selectAll: () => void;
+    copy: () => void;
+    paste: () => void;
+    cut: () => void;
+    undo: () => void;
+    redo: () => void;
 }
 
 
@@ -138,6 +144,26 @@ export class AppState {
         this.connections.get(tabId)?.page.selectAll();
     }
 
+    copy(tabId: TabId) {
+        this.connections.get(tabId)?.page.copy();
+    }
+
+    paste(tabId: TabId) {
+        this.connections.get(tabId)?.page.paste();
+    }
+
+    cut(tabId: TabId) {
+        this.connections.get(tabId)?.page.cut();
+    }
+
+    undo(tabId: TabId) {
+        this.connections.get(tabId)?.page.undo();
+    }
+
+    redo(tabId: TabId) {
+        this.connections.get(tabId)?.page.redo();
+    }
+
     private setActive(id: TabId, active: boolean) {
         let tab = this.tabs.find(t => t.id === id);
         if (!tab) {
@@ -194,7 +220,13 @@ export class AppState {
             goBack: () => this.back(id),
             goForward: () => this.forward(id),
             reload: () => this.reload(id),
+
             selectAll: () => this.selectAll(id),
+            copy: () => this.copy(id),
+            paste: () => this.paste(id),
+            cut: () => this.cut(id),
+            undo: () => this.undo(id),
+            redo: () => this.redo(id),
         };
 
         this.setTabs((prev) => [...prev, state]);

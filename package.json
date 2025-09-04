@@ -15,7 +15,7 @@
     "@kobalte/core": "^0.13.11",
     "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-opener": "^2",
-    "cef-client": "^1.1.11",
+    "cef-client": "^1.1.12",
     "lucide-solid": "^0.540.0",
     "solid-js": "^1.9.3",
     "validator": "^13.15.15"
