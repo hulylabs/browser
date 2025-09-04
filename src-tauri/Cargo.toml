@@ -15,7 +15,10 @@ name = "huly_browser_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
+anyhow = "1"
 tauri-build = { version = "2", features = [] }
+reqwest = { version = "0.12", features = ["blocking"] }
+zip = "4.5.0"
 
 [dependencies]
 anyhow = "1"

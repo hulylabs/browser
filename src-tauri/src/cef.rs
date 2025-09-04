@@ -1,27 +1,15 @@
 use std::{
-    fs,
-    io::Cursor,
+    fs, io,
     net::TcpListener,
-    path::PathBuf,
+    path::{Path, PathBuf},
+    process::Command,
     sync::{Arc, Mutex},
 };
 
-use serde::Serialize;
-use tauri::{Manager, ipc::Channel};
+use tauri::Manager;
 use tungstenite::connect;
-use zip::ZipArchive;
 
 use crate::BrowserState;
-
-#[cfg(target_os = "linux")]
-const CEF_URL: &str =
-    "https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-linux.zip";
-#[cfg(target_os = "macos")]
-const CEF_URL: &str =
-    "https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-macos.zip";
-#[cfg(target_os = "windows")]
-const CEF_URL: &str =
-    "https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-windows.zip";
 
 #[cfg(target_os = "linux")]
 const CEF_EXE: &str = "huly-cef-websockets";
@@ -30,25 +18,19 @@ const CEF_EXE: &str = "huly-cef-websockets.app/Contents/MacOS/huly-cef-websocket
 #[cfg(target_os = "windows")]
 const CEF_EXE: &str = "huly-cef-websockets.exe";
 
-#[derive(Clone, Serialize)]
-pub enum LaunchEvent {
-    Downloading,
-    Unpacking,
-    Launching,
-}
-
 #[tauri::command]
-pub async fn launch_cef(
-    app_handle: tauri::AppHandle,
-    channel: Channel<LaunchEvent>,
-) -> Result<String, String> {
-    let (cef_dir, cef_cache, cef_exe) = get_cef_paths(app_handle.clone())?;
-    ensure_cef_installed(&cef_dir, &cef_exe, &channel).await?;
+pub async fn launch_cef(app_handle: tauri::AppHandle) -> Result<String, String> {
+    let (cef_dir, cef_cache) = get_cef_paths(&app_handle)?;
 
-    _ = channel.send(LaunchEvent::Launching);
+    let temp_cef_dir = std::env::temp_dir().join("huly-cef");
+    fs::remove_dir_all(&temp_cef_dir)
+        .map_err(|e| format!("failed to remove old temp CEF dir: {e}"))?;
+    copy_dir_all(&cef_dir, &temp_cef_dir).map_err(|e| format!("failed to copy CEF: {e}"))?;
+
+    let cef_exe = temp_cef_dir.join(CEF_EXE);
 
     let port = find_available_port().map_err(|e| format!("couldn't find available port: {e}"))?;
-    let mut command = std::process::Command::new(cef_exe);
+    let mut command = Command::new(cef_exe);
     command
         .args(["--port", &port.to_string()])
         .args(["--cache-path", cef_cache.to_str().unwrap()]);
@@ -58,11 +40,13 @@ pub async fn launch_cef(
         command.creation_flags(0x08000000);
     }
 
-    let cef = command
-        .spawn()
-        .map_err(|e| format!("failed to launch CEF: {e}"))?;
+    let cef = command.spawn().map_err(|e| {
+        format!("failed to launch CEF with params port {port} cache-dir {cef_cache:?}: {e}")
+    })?;
 
-    wait_for_cef(port)?;
+    wait_for_cef(port).map_err(|e| {
+        format!("CEF failed to start with params port {port} cache-dir {cef_cache:?}: {e}")
+    })?;
 
     app_handle
         .state::<Arc<Mutex<BrowserState>>>()
@@ -73,35 +57,34 @@ pub async fn launch_cef(
     Ok(format!("ws://localhost:{port}/browser"))
 }
 
-fn get_cef_paths(app_handle: tauri::AppHandle) -> Result<(PathBuf, PathBuf, PathBuf), String> {
-    let app_data_dir = app_handle
+fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+    fs::create_dir_all(&dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
+fn get_cef_paths(app_handle: &tauri::AppHandle) -> Result<(PathBuf, PathBuf), String> {
+    let app_resource_dir = app_handle
         .path()
-        .app_data_dir()
-        .map_err(|_| "app data directory not found")?;
+        .resource_dir()
+        .map_err(|_| "app resource directory not found")?;
     let app_cache_dir = app_handle
         .path()
         .app_cache_dir()
-        .map_err(|_| "resource directory not found")?;
+        .map_err(|_| "app cache directory not found")?;
 
-    let cef_dir = app_data_dir.join("cef");
-    let cef_cache = app_cache_dir.join("cef");
-    let cef_exe = cef_dir.join(CEF_EXE);
+    let cef_dir = app_resource_dir.join("cef");
+    let cef_cache = app_cache_dir.join("cefcache");
 
-    Ok((cef_dir, cef_cache, cef_exe))
-}
-
-async fn ensure_cef_installed(
-    cef_dir: &PathBuf,
-    cef_exe: &PathBuf,
-    channel: &Channel<LaunchEvent>,
-) -> Result<(), String> {
-    if !cef_exe.exists() {
-        _ = channel.send(LaunchEvent::Downloading);
-        download_and_extract_cef(&cef_dir, &channel)
-            .await
-            .map_err(|e| format!("failed to download CEF: {}", e))?;
-    }
-    Ok(())
+    Ok((cef_dir, cef_cache))
 }
 
 fn wait_for_cef(port: u16) -> Result<(), String> {
@@ -113,22 +96,6 @@ fn wait_for_cef(port: u16) -> Result<(), String> {
     }
 
     Err("CEF healthcheck failed".into())
-}
-
-async fn download_and_extract_cef(
-    dir: &PathBuf,
-    channel: &Channel<LaunchEvent>,
-) -> anyhow::Result<()> {
-    let response = reqwest::get(CEF_URL).await?;
-    let data = response.bytes().await?.to_vec();
-    _ = channel.send(LaunchEvent::Unpacking);
-    let result = ZipArchive::new(Cursor::new(data))?.extract(&dir);
-
-    if let Err(e) = &result {
-        _ = fs::remove_dir_all(dir);
-        return Err(anyhow::anyhow!("failed to extract zip: {}", e));
-    }
-    Ok(())
 }
 
 fn healthcheck(host: &str, port: u16) -> bool {

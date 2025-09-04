@@ -15,10 +15,8 @@ interface Arguments {
   cef: string;
 }
 
-type LaunchEvent = 'Downloading' | 'Unpacking' | 'Launching';
-
-async function launchCEF(channel: Channel<LaunchEvent>): Promise<AppState> {
-  let addr = await invoke('launch_cef', { channel: channel });
+async function launchCEF(): Promise<AppState> {
+  let addr = await invoke('launch_cef');
   let browser = await connect(addr as string);
   return new AppState(browser);
 }
@@ -46,11 +44,6 @@ function App() {
   let [app, setApp] = createSignal<AppState | null>(null);
 
   onMount(async () => {
-    const channel = new Channel<LaunchEvent>();
-    channel.onmessage = (event) => {
-      setEvent({ message: `${event} Huly CEF...`, type: "info", title: "Information" });
-    };
-
     try {
       const args = await invoke("get_args") as Arguments;
 
@@ -63,7 +56,7 @@ function App() {
         const browser = await connect(args.cef);
         appState = new AppState(browser);
       } else {
-        appState = await launchCEF(channel);
+        appState = await launchCEF();
       }
 
       appState.addPlugin(new ShortcutPlugin());
