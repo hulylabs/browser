@@ -97,12 +97,11 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
         run: |
-          API_KEY_PATH=$PWD/AuthKey_${APPLE_API_KEY}.p8
-          API_KEY_DIR=$PWD
+          API_KEY_PATH=$PWD/privatekey.p8
+          echo $API_KEY_PATH
           echo "$APPLE_API_KEY_BASE64" | base64 --decode > $API_KEY_PATH
-          echo "Decoded API key at path $API_KEY_PATH"
+          ls $PWD
           echo "APPLE_API_KEY_PATH=$API_KEY_PATH" >> $GITHUB_ENV
-          echo "Added API key directory to environment variables: $API_KEY_DIR"
 
       - name: Build Huly Browser
         uses: tauri-apps/tauri-action@v0
