@@ -53,7 +53,12 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler!(get_args, cef::launch_cef))
+        .invoke_handler(tauri::generate_handler!(
+            get_args,
+            cef::is_cef_present,
+            cef::download_cef,
+            cef::launch_cef
+        ))
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

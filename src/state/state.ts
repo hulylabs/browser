@@ -1,8 +1,10 @@
-import { Browser, LoadState, LoadStatus, Tab, TabEventStream } from "cef-client";
+import { Browser, connect, LoadState, LoadStatus, Tab, TabEventStream } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { BrowserPlugin } from "./plugins/plugin";
 import { ProfileManager } from "./profiles";
 import { isURL, isFQDN } from "validator";
+import { invoke } from "@tauri-apps/api/core";
+import { Setter } from "solid-js";
 
 type TabId = number;
 
@@ -241,5 +243,78 @@ export class AppState {
             return searchString;
         }
         return `https://www.google.com/search?q=${searchString}`;
+    }
+}
+
+export interface Arguments {
+    profiles_enabled: boolean;
+    cef_manager: string;
+    cef: string;
+}
+
+export interface AppEvent {
+    message: string;
+    type: 'info' | 'error';
+}
+
+async function launchCEF(setEvent: Setter<AppEvent>): Promise<AppState | null> {
+    try {
+        setEvent({ message: 'Checking CEF presence...', type: 'info' });
+        let present = await invoke('is_cef_present');
+        if (!present) {
+            setEvent({ message: 'CEF not found, downloading...', type: 'info' });
+            await invoke('download_cef');
+        }
+
+        setEvent({ message: 'Launching CEF...', type: 'info' });
+        let addr = await invoke('launch_cef');
+        let browser = await connect(addr as string);
+        return new AppState(browser);
+    } catch (e) {
+        const errorMessage = "Failed to launch CEF: " + (e instanceof Error ? e.message : String(e));
+        setEvent({ message: errorMessage, type: 'error' });
+        return null;
+    }
+}
+
+async function connectToCefInstance(cefAddress: string, setEvent: Setter<AppEvent>): Promise<AppState | null> {
+    try {
+        setEvent({ message: 'Connecting to CEF instance...', type: 'info' });
+        let browser = await connect(cefAddress);
+        return new AppState(browser);
+    } catch (e) {
+        const errorMessage = "Failed to connect to CEF instance: " + (e instanceof Error ? e.message : String(e));
+        setEvent({ message: errorMessage, type: 'error' });
+        return null;
+    }
+}
+
+async function connectToManager(managerAddress: string, setEvent: Setter<AppEvent>): Promise<AppState | null> {
+    try {
+        setEvent({ message: 'Connecting...', type: 'info' });
+        const profileManager = new ProfileManager(managerAddress);
+        const profiles = await profileManager.getProfiles();
+        if (profiles.length === 0) {
+            setEvent({ message: 'No profiles found', type: 'error' });
+            return null;
+        }
+
+        profileManager.setSelected(profiles[0]);
+        const client = await profileManager.connect(profiles[0]);
+        return new AppState(client, profileManager);
+    } catch (e) {
+        const errorMessage = "Failed to connect to manager: " + (e instanceof Error ? e.message : String(e));
+        setEvent({ message: errorMessage, type: 'error' });
+        return null;
+    }
+}
+
+export async function initializeApp(args: Arguments, setEvent: Setter<AppEvent>): Promise<AppState | null> {
+    if (args.profiles_enabled) {
+        return await connectToManager(args.cef_manager, setEvent);
+    } else if (args.cef !== "") {
+        return await connectToCefInstance(args.cef, setEvent);
+    } else {
+        return await launchCEF(setEvent);
     }
 }
