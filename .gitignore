@@ -1,5 +1,5 @@
 node_modules
 dist
-cef
+src-tauri/cef
 
 .DS_Store
