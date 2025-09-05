@@ -65,8 +65,9 @@ pub fn find_available_port() -> Result<u16, String> {
 }
 
 pub fn compare_checksums(url: &str, checksum_path: impl AsRef<Path>) -> Result<bool, String> {
-    let existing = fs::read_to_string(checksum_path)
-        .map_err(|e| format!("failed to read existing checksum: {e}"))?;
+    let Ok(existing) = fs::read_to_string(checksum_path) else {
+        return Ok(false);
+    };
     let new = download_checksum(url)?;
 
     Ok(existing == new)
@@ -76,7 +77,7 @@ pub fn download_checksum(url: &str) -> Result<String, String> {
     let checksum = reqwest::blocking::get(format!("{url}.sha256"))
         .map_err(|e| format!("failed to download checksum: {e}"))?
         .text()
-        .map_err(|e| format!("failed to read checksum response: {e}"))?;
+        .map_err(|e| format!("failed to download checksum: {e}"))?;
     Ok(checksum)
 }
 
