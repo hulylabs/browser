@@ -42,17 +42,12 @@ pub fn get_cef_paths(app_handle: &tauri::AppHandle) -> Result<(PathBuf, PathBuf)
 pub fn wait_for_cef(port: u16) -> Result<(), String> {
     for _ in 0..10 {
         std::thread::sleep(std::time::Duration::from_millis(500));
-        if healthcheck("localhost", port) {
+        if connect(format!("ws://localhost:{}", port)).is_ok() {
             return Ok(());
         }
     }
 
     Err("CEF healthcheck failed".into())
-}
-
-pub fn healthcheck(host: &str, port: u16) -> bool {
-    let address = format!("ws://{}:{}", host, port);
-    connect(address.clone()).is_ok()
 }
 
 pub fn find_available_port() -> Result<u16, String> {
