@@ -94,7 +94,6 @@ jobs:
 
       - name: decode API key to file
         env:
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_BASE64: ${{ secrets.APPLE_API_KEY_BASE64 }}
         run: |
           API_KEY_PATH=$PWD/privatekey.p8
