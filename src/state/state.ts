@@ -236,10 +236,9 @@ export class AppState {
 
     private processSearchString(searchString: string) {
         let is1 = isFQDN(searchString);
-        let is2 = isURL(searchString, { protocols: ["http", "https"] });
+        let is2 = isURL(searchString, { protocols: ["http", "https", "huly"], require_tld: false });
+
         if (is1 || is2) {
-            console.log("It's a domain: ", is1);
-            console.log("It's a URL: ", is2);
             return searchString;
         }
         return `https://www.google.com/search?q=${searchString}`;

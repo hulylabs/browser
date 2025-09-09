@@ -9,6 +9,6 @@ if (!import.meta.env.DEV) {
     }
 }
 
-setConfig({ logging: false, defaultUrl: "data:text/html,<html><head><title>New Tab</title></head><body></body></html>" })
+setConfig({ logging: false, defaultUrl: "huly://newtab" })
 
 render(() => <App />, document.getElementById("root") as HTMLElement);
