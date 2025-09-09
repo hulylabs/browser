@@ -3,14 +3,14 @@ import { AppState } from "../../state/state";
 
 export function Profiles(props: { app: AppState }) {
   const fetchProfiles = async () => {
-    let profiles = await props.app.profileManager!.getProfiles();
-    return profiles;
+    let profiles = await props.app.profiles!.getProfiles();
+    return profiles; profiles
   };
   const [profiles] = createResource(fetchProfiles);
 
   createEffect(async () => {
-    let profile = props.app.profileManager!.selected();
-    let client = await props.app.profileManager!.connect(profile);
+    let profile = props.app.profiles!.selected();
+    let client = await props.app.profiles!.connect(profile);
     await props.app.setClient(client);
   });
 
@@ -27,8 +27,8 @@ export function Profiles(props: { app: AppState }) {
       <Show when={profiles()}>
         <div>
           <select
-            value={props.app.profileManager?.selected()}
-            onInput={e => props.app.profileManager?.setSelected((e.target as HTMLSelectElement).value)}
+            value={props.app.profiles?.selected()}
+            onInput={e => props.app.profiles?.setSelected((e.target as HTMLSelectElement).value)}
           >
             <option value="" disabled selected>Select a profile</option>
             <For each={profiles()}>

@@ -5,10 +5,6 @@ import Notification from "./components/Notification";
 import "./App.css";
 import { invoke } from "@tauri-apps/api/core";
 import Sidebar from "./components/sidebar";
-import { ShortcutPlugin } from "./state/plugins/shortcut";
-
-
-
 
 function App() {
   let [event, setEvent] = createSignal<AppEvent>({ message: "Initializing App", type: "info" });
@@ -18,7 +14,6 @@ function App() {
     const args = await invoke("get_args") as Arguments;
     let app = await initializeApp(args, setEvent);
     if (!app) return;
-    app.addPlugin(new ShortcutPlugin());
     setApp(app);
   });
 

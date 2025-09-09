@@ -1,10 +1,10 @@
 import { Browser, connect, LoadState, LoadStatus, Tab, TabEventStream } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
-import { BrowserPlugin } from "./plugins/plugin";
 import { ProfileManager } from "./profiles";
 import { isURL, isFQDN } from "validator";
 import { invoke } from "@tauri-apps/api/core";
-import { Setter } from "solid-js";
+import { Accessor, createSignal, Setter } from "solid-js";
+import { Shortcuts } from "./shortcuts";
 
 type TabId = number;
 
@@ -41,25 +41,27 @@ export interface TabState {
 
 export class AppState {
     private client: Browser;
-    private plugins: BrowserPlugin[];
 
-    profileManager: ProfileManager | undefined;
+    shortcuts: Shortcuts;
+    profiles: ProfileManager | undefined;
 
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
     connections: Map<TabId, TabConnection> = new Map();
 
-    constructor(client: Browser, profileManager?: ProfileManager) {
+    browserFocused: Accessor<boolean>;
+    setBrowserFocused: Setter<boolean>;
+
+    private focusUrlCallback: (() => void) | null = null;
+
+    constructor(client: Browser, profiles?: ProfileManager) {
         this.client = client;
-        this.plugins = [];
 
-        this.profileManager = profileManager;
+        this.shortcuts = new Shortcuts(this);
+        this.profiles = profiles;
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
-    }
 
-    addPlugin(plugin: BrowserPlugin) {
-        plugin.setup(this);
-        this.plugins.push(plugin);
+        [this.browserFocused, this.setBrowserFocused] = createSignal(false);
     }
 
     async setClient(client: Browser) {
@@ -82,6 +84,19 @@ export class AppState {
         let tab = await this.client.openTab({ url })!;
         this.addTab(tab);
         this.setActiveTab(tab.id);
+        this.focusUrl();
+    }
+
+    setFocusUrlCallback(callback: () => void) {
+        this.focusUrlCallback = callback;
+    }
+
+    focusUrl() {
+        if (this.focusUrlCallback) this.focusUrlCallback();
+    }
+
+    isBrowserFocused(): boolean {
+        return this.browserFocused();
     }
 
     getStackTrace(): string {
@@ -100,6 +115,22 @@ export class AppState {
         }
 
         this.setActive(tabId, true);
+    }
+
+    shiftTab(next: boolean) {
+        if (this.tabs.length === 0) return;
+
+        let active = this.getActiveTab();
+        if (!active) return;
+
+        let index = this.tabs.findIndex((tab) => tab.id === active.id);
+
+        if (next) {
+            index = (index + 1) % this.tabs.length;
+        } else {
+            index = (index - 1 + this.tabs.length) % this.tabs.length;
+        }
+        this.setActiveTab(this.tabs[index].id);
     }
 
     closeTab(tabId: TabId) {

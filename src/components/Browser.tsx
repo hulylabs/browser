@@ -54,9 +54,7 @@ function Browser(props: { app: AppState }) {
     });
 
     connection.events.on("Cursor", (cursor) => InputHandler.setCursor(canvas, cursor));
-
-    InputHandler.setupEventListeners(canvas, connection);
-
+    InputHandler.setupEventListeners(props.app, canvas, connection);
   });
 
   return (
@@ -70,7 +68,6 @@ function Browser(props: { app: AppState }) {
 }
 
 export default Browser;
-
 
 class Renderer {
   private canvas: HTMLCanvasElement;
@@ -119,52 +116,50 @@ class InputHandler {
     [Cursor.Crosshair]: "crosshair",
   };
 
-  static setupEventListeners(canvas: HTMLCanvasElement, connection: TabConnection) {
-    canvas.onmousemove = (e) => this.handleMouseMove(e, connection);
-    canvas.onmousedown = (e) => this.handleMouseDown(e, connection);
-    canvas.onmouseup = (e) => this.handleMouseUp(e, connection);
-    canvas.onwheel = (e) => this.handleWheel(e, connection);
+  static setupEventListeners(app: AppState, canvas: HTMLCanvasElement, connection: TabConnection) {
+    canvas.onmousemove = (e) => connection.page.mouseMove(e.offsetX, e.offsetY);
+    canvas.onmousedown = (e) => connection.page.click(e.offsetX, e.offsetY, e.button, true);
+    canvas.onmouseup = (e) => connection.page.click(e.offsetX, e.offsetY, e.button, false);
+    canvas.onwheel = (e) => connection.page.scroll(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
 
-    canvas.onkeydown = (e) => this.handleKeyDown(e, connection);
-    canvas.onkeyup = (e) => this.handleKeyUp(e, connection);
+    canvas.onkeydown = (e) => {
+      if (app.shortcuts.checkShortcutConflict(e)) return;
 
-    canvas.onfocus = () => connection.page.focus(true);
-    canvas.onblur = () => connection.page.focus(false);
-  }
-
-  private static handleMouseMove(e: MouseEvent, connection: TabConnection) {
-    connection.page.mouseMove(e.offsetX, e.offsetY);
-  }
-
-  private static handleMouseDown(e: MouseEvent, connection: TabConnection) {
-    connection.page.click(e.offsetX, e.offsetY, e.button, true);
-  }
-
-  private static handleMouseUp(e: MouseEvent, connection: TabConnection) {
-    connection.page.click(e.offsetX, e.offsetY, e.button, false);
-  }
-
-  private static handleWheel(e: WheelEvent, connection: TabConnection) {
-    connection.page.scroll(e.offsetX, e.offsetY, e.deltaX, e.deltaY);
-  }
-
-  private static handleKeyDown(e: KeyboardEvent, connection: TabConnection) {
-    const keyCode = domCodeToKeyCode(e.code);
-    if (keyCode !== undefined) {
-      let unicode = 0;
-      if (e.key.length === 1) {
-        unicode = e.key.charCodeAt(0);
+      if (e.key === "Tab") {
+        e.preventDefault();
       }
-      connection.page.key(keyCode, unicode, true, e.ctrlKey, e.shiftKey);
 
+      const keyCode = domCodeToKeyCode(e.code);
+      if (keyCode !== undefined) {
+        let unicode = 0;
+        if (e.key.length === 1) {
+          unicode = e.key.charCodeAt(0);
+        }
+        connection.page.key(keyCode, unicode, true, e.ctrlKey, e.shiftKey);
+      }
     }
-  }
+    canvas.onkeyup = (e) => {
+      if (app.shortcuts.checkShortcutConflict(e)) return;
 
-  private static handleKeyUp(e: KeyboardEvent, connection: TabConnection) {
-    const keyCode = domCodeToKeyCode(e.code);
-    if (keyCode !== undefined) {
-      connection.page.key(keyCode, 0, false, e.ctrlKey, e.shiftKey);
+      if (e.key === "Tab") {
+        e.preventDefault();
+      }
+
+      const keyCode = domCodeToKeyCode(e.code);
+      if (keyCode !== undefined) {
+        connection.page.key(keyCode, 0, false, e.ctrlKey, e.shiftKey);
+      }
     }
+
+    canvas.onfocus = () => {
+      app.setBrowserFocused(true);
+      connection.page.focus(true);
+    };
+    canvas.onblur = () => {
+      console.log("canvas blurred");
+      app.setBrowserFocused(false);
+      connection.page.focus(false);
+    };
   }
 
   static setCursor(canvas: HTMLCanvasElement, cursor: Cursor) {

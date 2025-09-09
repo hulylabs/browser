@@ -12,7 +12,7 @@ export default function Sidebar(props: { app: AppState }) {
             <ResizablePane.Content class="sidebar-content">
                 <TabControls app={props.app} />
                 <Input app={props.app} />
-                <Show when={props.app.profileManager}>
+                <Show when={props.app.profiles}>
                     <Profiles app={props.app} />
                 </Show>
                 <div onClick={() => props.app.newTab()} class="new-tab-button">
