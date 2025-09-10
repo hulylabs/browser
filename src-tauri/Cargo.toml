@@ -1,7 +1,7 @@
 [package]
 name = "huly-browser"
 version = "0.3.4"
-description = "A Tauri App"
+description = "Huly Browser"
 authors = ["you"]
 edition = "2024"
 

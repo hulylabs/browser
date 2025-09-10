@@ -15,9 +15,7 @@ export class Shortcuts {
 
     constructor(app: AppState) {
         window.addEventListener("keydown", (e) => {
-            console.log("event: ", e);
             let shortcut = this.eventToShortcut(e);
-            console.log("got shortcut", shortcut);
 
             if (this.shortcuts.has(shortcut)) {
                 let action = this.actions.get(this.shortcuts.get(shortcut) ?? "");

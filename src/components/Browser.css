@@ -4,6 +4,7 @@
 
 .canvas {
     display: block;
+    outline: none;
 }
 
 .fps-counter {

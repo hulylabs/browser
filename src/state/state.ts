@@ -267,7 +267,7 @@ export class AppState {
 
     private processSearchString(searchString: string) {
         let is1 = isFQDN(searchString);
-        let is2 = isURL(searchString, { protocols: ["http", "https", "huly"], require_tld: false });
+        let is2 = isURL(searchString, { protocols: ["http", "https", "huly", "file"], require_tld: false, require_host: false });
 
         if (is1 || is2) {
             return searchString;

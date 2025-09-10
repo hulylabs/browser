@@ -124,10 +124,7 @@ class InputHandler {
 
     canvas.onkeydown = (e) => {
       if (app.shortcuts.checkShortcutConflict(e)) return;
-
-      if (e.key === "Tab") {
-        e.preventDefault();
-      }
+      if (e.key === "Tab") e.preventDefault();
 
       const keyCode = domCodeToKeyCode(e.code);
       if (keyCode !== undefined) {
@@ -140,10 +137,7 @@ class InputHandler {
     }
     canvas.onkeyup = (e) => {
       if (app.shortcuts.checkShortcutConflict(e)) return;
-
-      if (e.key === "Tab") {
-        e.preventDefault();
-      }
+      if (e.key === "Tab") e.preventDefault();
 
       const keyCode = domCodeToKeyCode(e.code);
       if (keyCode !== undefined) {
