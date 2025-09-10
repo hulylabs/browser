@@ -3,6 +3,8 @@ import { AppState, TabConnection } from "../state/state";
 import "./Browser.css";
 import { domCodeToKeyCode } from "../keyboard/keycodes";
 import { Cursor } from "cef-client";
+import BrowserContextMenu from "./BrowserContextMenu";
+
 
 function Browser(props: { app: AppState }) {
   let canvasContainer!: HTMLDivElement;
@@ -59,10 +61,12 @@ function Browser(props: { app: AppState }) {
 
   return (
     <>
-      <div class="canvas-container" ref={canvasContainer}>
-        <div class="fps-counter">{fps()} FPS</div>
-        <canvas tabIndex="0" class="canvas" ref={canvas}></canvas>
-      </div>
+      <BrowserContextMenu app={props.app}>
+        <div class="canvas-container" ref={canvasContainer}>
+          <div class="fps-counter">{fps()} FPS</div>
+          <canvas tabIndex="0" class="canvas" ref={canvas}></canvas>
+        </div>
+      </BrowserContextMenu>
     </>
   );
 }
