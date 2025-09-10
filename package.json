@@ -1,6 +1,6 @@
 {
-  "name": "Huly Browser",
-  "version": "0.3.4",
+  "name": "huly-browser",
+  "version": "0.3.5",
   "description": "",
   "type": "module",
   "scripts": {
