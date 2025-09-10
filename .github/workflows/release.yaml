@@ -7,7 +7,6 @@ on:
 
 jobs:
   release:
-    if: false
     permissions:
       contents: write
     strategy:
