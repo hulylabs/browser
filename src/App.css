@@ -23,35 +23,6 @@ body,
 
 .sidebar {
   margin: 5px;
-
-  display: flex;
-  flex-direction: row;
-}
-
-.sidebar-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.new-tab-button {
-  padding: 10px 10px;
-  border-radius: 5px;
-
-  color: #666;
-}
-
-.new-tab-button:hover {
-  background-color: rgba(100, 100, 100, 0.1);
-  cursor: pointer;
-}
-
-.tabs {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  overflow: auto;
 }
 
 .browser {

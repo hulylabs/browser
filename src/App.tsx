@@ -4,7 +4,7 @@ import Browser from "./components/Browser";
 import Notification from "./components/Notification";
 import "./App.css";
 import { invoke } from "@tauri-apps/api/core";
-import Sidebar from "./components/sidebar";
+import Sidebar from "./components/Sidebar";
 
 function App() {
   let [event, setEvent] = createSignal<AppEvent>({ message: "Initializing App", type: "info" });
@@ -21,7 +21,9 @@ function App() {
     <Show when={app()} fallback={<Notification message={event().message} type={event().type} />}>
       {(app) =>
         <div class="app">
-          <Sidebar app={app()} />
+          <div class="sidebar">
+            <Sidebar app={app()} />
+          </div>
           <div class="browser">
             <Browser app={app()} />
           </div>

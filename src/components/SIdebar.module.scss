@@ -1,0 +1,40 @@
+.version {
+    margin-top: auto;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: #999;
+    text-align: center;
+}
+
+.pane {
+    height: 100%;
+
+    display: flex;
+    flex-direction: row;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.newTabButton {
+    padding: 10px 10px;
+    border-radius: 5px;
+
+    color: #666;
+
+    &:hover {
+        background-color: rgba(100, 100, 100, 0.1);
+        cursor: pointer;
+    }
+}
+
+.tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    overflow: auto;
+}
