@@ -43,6 +43,7 @@ export class Shortcuts {
         this.shortcuts.set("alt+g", "focusOnAddressBar");
         this.shortcuts.set("ctrl+tab", "nextTab");
         this.shortcuts.set("ctrl+shift+tab", "previousTab");
+        this.shortcuts.set("ctrl+shift+t", "restoreSession");
 
         this.actions.set("newTab", { ctx: "global", execute: () => app.newTab() });
         this.actions.set("closeTab", { ctx: "global", execute: () => app.getActiveTab()?.close() });
@@ -55,6 +56,7 @@ export class Shortcuts {
         this.actions.set("focusOnAddressBar", { ctx: "global", execute: () => app.focusUrl() });
         this.actions.set("nextTab", { ctx: "global", execute: () => app.shiftTab(true) });
         this.actions.set("previousTab", { ctx: "global", execute: () => app.shiftTab(false) });
+        this.actions.set("restoreSession", { ctx: "global", execute: () => app.restore() });
     }
 
     checkShortcutConflict(e: KeyboardEvent): boolean {
@@ -69,9 +71,16 @@ export class Shortcuts {
         if (e.altKey) keys.push("alt");
         if (e.metaKey) keys.push("meta");
 
+        let keyCode = e.code.toLowerCase();
         let modifierKeys = ["controlleft", "controlright", "shiftleft", "shiftright", "altleft", "altright", "meta"];
-        if (!modifierKeys.includes(e.code.toLowerCase())) {
-            keys.push(e.code.toLowerCase());
+        if (!modifierKeys.includes(keyCode)) {
+            if (keyCode.startsWith("key")) {
+                keyCode = keyCode.substring(3);
+            }
+            else if (keyCode.startsWith("digit")) {
+                keyCode = keyCode.substring(5);
+            }
+            keys.push(keyCode);
         }
 
         let shortcut = keys.join("+");

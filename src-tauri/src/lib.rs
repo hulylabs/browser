@@ -1,15 +1,16 @@
 use std::{
-    process::Child,
+    net::TcpStream,
     sync::{Arc, Mutex},
 };
 
 use clap::Parser;
 use serde::Serialize;
 use tauri::Manager;
+use tungstenite::{Message, WebSocket, stream::MaybeTlsStream};
 
 mod cef;
 
-#[derive(Parser, Serialize, Clone)]
+#[derive(Debug, Parser, Serialize, Clone)]
 struct Arguments {
     #[clap(long, env = "PROFILES_ENABLED", default_value = "false")]
     profiles_enabled: bool,
@@ -21,7 +22,19 @@ struct Arguments {
 
 struct BrowserState {
     args: Arguments,
-    cef_process: Option<Child>,
+    cef_connection: Option<WebSocket<MaybeTlsStream<TcpStream>>>,
+}
+
+fn construct_close_message() -> Message {
+    Message::Text(
+        serde_json::json!({
+            "id": "close",
+            "method": "close",
+            "params": {}
+        })
+        .to_string()
+        .into(),
+    )
 }
 
 #[tauri::command]
@@ -37,7 +50,7 @@ pub fn run() {
 
     let state = Arc::new(Mutex::new(BrowserState {
         args,
-        cef_process: None,
+        cef_connection: None,
     }));
     let clone = state.clone();
     tauri::Builder::default()
@@ -47,9 +60,9 @@ pub fn run() {
         })
         .on_window_event(move |_, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let cef_process = clone.lock().unwrap().cef_process.take();
-                if let Some(mut cef_process) = cef_process {
-                    let _ = cef_process.kill();
+                let mut state = clone.lock().expect("Failed to lock BrowserState");
+                if let Some(mut connection) = state.cef_connection.take() {
+                    _ = connection.send(construct_close_message());
                 }
             }
         })

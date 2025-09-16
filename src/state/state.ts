@@ -76,6 +76,12 @@ export class AppState {
         setInterval(async () => await this.fetchTabs(), 5000);
     }
 
+    async restore() {
+        let tabs = await this.client.restore();
+        tabs.forEach(tab => this.addTab(tab));
+        this.setActive(tabs[0].id, true);
+    }
+
     async newTab(searchString?: string) {
         let url = "";
         if (searchString) {

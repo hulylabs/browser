@@ -73,7 +73,7 @@ pub async fn launch_cef(app_handle: tauri::AppHandle) -> Result<String, String> 
         command.creation_flags(0x08000000);
     }
 
-    let cef = command.spawn().map_err(|e| {
+    command.spawn().map_err(|e| {
         format!("failed to launch CEF with params port {port} cache-dir {cef_cache:?}: {e}")
     })?;
 
@@ -81,11 +81,15 @@ pub async fn launch_cef(app_handle: tauri::AppHandle) -> Result<String, String> 
         format!("CEF failed to start with params port {port} cache-dir {cef_cache:?}: {e}")
     })?;
 
+    let address = format!("ws://localhost:{port}/browser");
+    let (ws, _) = tungstenite::connect(address.clone())
+        .map_err(|e| format!("failed to connect to CEF: {e}"))?;
+
     app_handle
         .state::<Arc<Mutex<BrowserState>>>()
         .lock()
         .unwrap()
-        .cef_process = Some(cef);
+        .cef_connection = Some(ws);
 
-    Ok(format!("ws://localhost:{port}/browser"))
+    Ok(address)
 }
