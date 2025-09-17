@@ -1,43 +1,44 @@
 .overlay {
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 0px;
+    left: 0px;
     width: 100vw;
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0);
+    background-color: transparent;
     z-index: 1000;
 }
 
 .searchContainer {
     display: flex;
     flex-direction: column;
-    width: 70%;
-    max-width: 600px;
-    min-width: 400px;
-
+    width: clamp(400px, 70%, 600px);
     border-radius: 10px;
-    background: #edededff;
+    background: #ededed;
     box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.2);
     border: 1px solid #ccc;
 }
 
-.inputContainer {
+%flexContainer {
     display: flex;
     align-items: center;
 }
 
-.searchIcon {
+.inputContainer {
+    @extend %flexContainer;
+}
+
+.icon {
     color: #666;
-    margin: 0 15px;
+    margin: 0px 15px;
 }
 
 .input {
     flex: 1;
     font-size: 1.2rem;
-    padding: 15px 0;
+    padding: 15px 0px;
     outline: none;
     border: none;
     background: transparent;
@@ -58,9 +59,8 @@
 }
 
 .historyItem {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
+    @extend %flexContainer;
+    padding: 12px 0px;
     cursor: pointer;
 
     &:hover {
@@ -68,13 +68,9 @@
     }
 }
 
-.historyIcon {
-    color: #666;
-    margin: 0 15px;
-}
 
 .historyText {
+    flex: 1;
     font-size: 1rem;
     color: #333;
-    flex: 1;
 }

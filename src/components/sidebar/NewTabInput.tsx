@@ -39,7 +39,7 @@ export function NewTabInput(props: { app: AppState, close: () => void }) {
         <div class={styles.overlay} onClick={() => props.close()}>
             <div class={styles.searchContainer} onClick={e => e.stopPropagation()}>
                 <div class={styles.inputContainer}>
-                    <SearchIcon size={24} class={styles.searchIcon} />
+                    <SearchIcon size={24} class={styles.icon} />
                     <input
                         ref={inputRef}
                         type="text"
@@ -56,7 +56,7 @@ export function NewTabInput(props: { app: AppState, close: () => void }) {
                     <For each={searchHistory}>
                         {(item) => (
                             <div class={styles.historyItem} onClick={() => handleHistoryClick(item)}>
-                                <HistoryIcon size={20} class={styles.historyIcon} />
+                                <HistoryIcon size={20} class={styles.icon} />
                                 <span class={styles.historyText}>{item}</span>
                             </div>
                         )}
