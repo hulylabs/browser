@@ -15,13 +15,13 @@ const CEF_URL: &str =
 const CEF_RESOURCE_PATH: &str = "cef";
 
 fn main() {
-    if !compare_checksums().unwrap_or(false) {
-        if let Err(e) = download_and_extract(CEF_RESOURCE_PATH) {
-            println!("cargo:error=Error downloading and extracting CEF: {}", e);
-            _ = fs::remove_dir_all(CEF_RESOURCE_PATH);
-            std::process::exit(1);
-        }
-    }
+    // if !compare_checksums().unwrap_or(false) {
+    //     if let Err(e) = download_and_extract(CEF_RESOURCE_PATH) {
+    //         println!("cargo:error=Error downloading and extracting CEF: {}", e);
+    //         _ = fs::remove_dir_all(CEF_RESOURCE_PATH);
+    //         std::process::exit(1);
+    //     }
+    // }
     tauri_build::build();
 }
 
