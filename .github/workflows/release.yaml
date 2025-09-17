@@ -58,17 +58,23 @@ jobs:
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: false
           prerelease: false
-      
+
       - name: Upload additional artifacts
         if: matrix.os == 'windows-latest'
-        uses: softprops/action-gh-release@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: ./src-tauri/target/release/huly-browser.exe
-          name: 'Huly Browser v${{ steps.tauri-build.outputs.appVersion }}'
-          tag_name: v${{ steps.tauri-build.outputs.appVersion }}
-  
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
+          mv src-tauri/target/release/huly-browser.exe src-tauri/target/release/huly-browser-${VERSION}.exe
+
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            gh release upload "v$VERSION" src-tauri/target/release/huly-browser-${VERSION}.exe
+          else
+            gh release create "v$VERSION" \
+              --title "Huly Browser v$VERSION" \
+              src-tauri/target/release/huly-browser-${VERSION}.exe
+          fi
+
   release-macos:
     permissions:
       contents: write
