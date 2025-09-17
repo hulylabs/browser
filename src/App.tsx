@@ -4,7 +4,8 @@ import Browser from "./components/Browser";
 import Notification from "./components/Notification";
 import "./App.css";
 import { invoke } from "@tauri-apps/api/core";
-import Sidebar from "./components/Sidebar";
+import Sidebar from "./components/sidebar";
+
 
 function App() {
   let [event, setEvent] = createSignal<AppEvent>({ message: "Initializing App", type: "info" });
