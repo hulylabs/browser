@@ -2,10 +2,16 @@ import { ContextMenu } from "@kobalte/core/context-menu";
 import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-solid";
 import styles from "./BrowserContextMenu.module.scss";
 import { AppState } from "../state/state";
-import { createMemo, JSX } from "solid-js";
+import { createMemo, JSX, Show } from "solid-js";
 
 function BrowserContextMenu(props: { app: AppState, children: JSX.Element }) {
     let activeTabMemo = createMemo(() => props.app.getActiveTab());
+    let openNewTab = () => {
+        let url = activeTabMemo()?.hoveredUrl;
+        if (url && url !== "") {
+            props.app.newTab(url);
+        }
+    }
 
     return (
         <ContextMenu>
@@ -15,6 +21,14 @@ function BrowserContextMenu(props: { app: AppState, children: JSX.Element }) {
             <ContextMenu.Portal>
                 <ContextMenu.Content class={styles.content}>
                     <ContextMenu.Arrow class={styles.arrow} />
+                    <Show when={activeTabMemo() !== null && activeTabMemo()?.hoveredUrl !== ""}>
+                        <ContextMenu.Item
+                            class={styles.item}
+                            onSelect={openNewTab}
+                        >
+                            <span class={styles.label}>Open in a new tab</span>
+                        </ContextMenu.Item>
+                    </Show>
 
                     <ContextMenu.Item
                         class={styles.item}
@@ -45,7 +59,7 @@ function BrowserContextMenu(props: { app: AppState, children: JSX.Element }) {
                     </ContextMenu.Item>
                 </ContextMenu.Content>
             </ContextMenu.Portal>
-        </ContextMenu>
+        </ContextMenu >
     );
 };
 

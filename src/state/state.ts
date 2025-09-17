@@ -22,6 +22,7 @@ export interface TabState {
     canGoBack: boolean;
     canGoForward: boolean;
     isLoading: boolean;
+    hoveredUrl: string;
 
     goTo: (url: string) => void;
     activate: () => void;
@@ -237,6 +238,7 @@ export class AppState {
         events.on("Url", (url: string) => this.setTabs(t => t.id === id, "url", url));
         events.on("Favicon", (url: string) => this.setTabs(t => t.id === id, "favicon", url));
         events.on("NewTab", (url: string) => this.newTab(url));
+        events.on("UrlHovered", (url: string) => this.setTabs(t => t.id === id, "hoveredUrl", url));
         events.on("LoadState", (state: LoadState) => {
             this.setTabs(t => t.id === id, "isLoading", state.status === LoadStatus.Loading);
             this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
@@ -252,6 +254,7 @@ export class AppState {
             canGoBack: false,
             canGoForward: false,
             isLoading: false,
+            hoveredUrl: "",
 
             goTo: (url: string) => this.navigate(id, url),
             activate: () => this.setActiveTab(tab.id),
