@@ -32,6 +32,14 @@ jobs:
       - name: Install Node Modules
         run: npm install
 
+      - name: Check Release Exists
+        run: |
+          VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists!"
+            exit 1
+          fi
+
       - name: Build Huly Browser
         uses: tauri-apps/tauri-action@v0
         id: tauri-build
@@ -68,6 +76,14 @@ jobs:
 
       - name: Install Node Modules
         run: npm install
+
+      - name: Check Release Exists
+        run: |
+          VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists!"
+            exit 1
+          fi
 
       - name: Import Apple Developer Certificate
         env:
