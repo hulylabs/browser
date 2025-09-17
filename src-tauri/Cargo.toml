@@ -1,6 +1,6 @@
 [package]
 name = "huly-browser"
-version = "0.3.5"
+version = "0.3.6"
 description = "Huly Browser"
 authors = ["you"]
 edition = "2024"
