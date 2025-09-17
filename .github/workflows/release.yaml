@@ -95,6 +95,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
+          echo "Releasing version: $VERSION"
           if gh release view "v$VERSION" > /dev/null 2>&1; then
             echo "Release $VERSION already exists!"
             exit 1
