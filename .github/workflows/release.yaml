@@ -37,6 +37,8 @@ jobs:
         run: npm install
 
       - name: Check Release Exists
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
           echo "Releasing version: $VERSION"
@@ -83,9 +85,11 @@ jobs:
         run: npm install
 
       - name: Check Release Exists
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
-          if gh release view "$VERSION" > /dev/null 2>&1; then
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
             echo "Release $VERSION already exists!"
             exit 1
           fi
