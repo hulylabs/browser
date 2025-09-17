@@ -5,6 +5,10 @@ on:
     branches:
       - release/*
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   release:
     permissions:
@@ -35,7 +39,8 @@ jobs:
       - name: Check Release Exists
         run: |
           VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
-          if gh release view "$VERSION" > /dev/null 2>&1; then
+          echo "Releasing version: $VERSION"
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
             echo "Release $VERSION already exists!"
             exit 1
           fi
