@@ -6,7 +6,7 @@ import { Profiles } from "./sidebar/Profiles";
 import Tab from "./sidebar/Tab";
 import { AppState } from "../state/state";
 import { getVersion } from "@tauri-apps/api/app";
-import styles from "./Sidebar.module.scss";
+import styles from "./SIdebar.module.scss"
 
 export default function Sidebar(props: { app: AppState }) {
     const [version] = createResource(getVersion);
