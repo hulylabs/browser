@@ -34,15 +34,15 @@ const CEF_EXE: &str = "huly-cef-websockets.app/Contents/MacOS/huly-cef-websocket
 const CEF_EXE: &str = "huly-cef-websockets.exe";
 
 #[tauri::command]
-pub fn is_cef_present(app_handle: tauri::AppHandle) -> Result<bool, String> {
+pub async fn is_cef_present(app_handle: tauri::AppHandle) -> Result<bool, String> {
     let (cef_dir, _) = get_cef_paths(&app_handle)?;
-    compare_checksums(CEF_URL, cef_dir.join("checksum"))
+    compare_checksums(CEF_URL, cef_dir.join("checksum")).await
 }
 
 #[tauri::command]
-pub fn download_cef(app_handle: tauri::AppHandle) -> Result<(), String> {
+pub async fn download_cef(app_handle: tauri::AppHandle) -> Result<(), String> {
     let (cef_dir, _) = get_cef_paths(&app_handle)?;
-    let result = download_and_extract(CEF_URL, &cef_dir);
+    let result = download_and_extract(CEF_URL, &cef_dir).await;
     if result.is_err() {
         _ = fs::remove_dir_all(&cef_dir);
         return result;

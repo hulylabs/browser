@@ -59,31 +59,36 @@ pub fn find_available_port() -> Result<u16, String> {
     Err("No available ports found".into())
 }
 
-pub fn compare_checksums(url: &str, checksum_path: impl AsRef<Path>) -> Result<bool, String> {
+pub async fn compare_checksums(url: &str, checksum_path: impl AsRef<Path>) -> Result<bool, String> {
     let Ok(existing) = fs::read_to_string(checksum_path) else {
         return Ok(false);
     };
-    let new = download_checksum(url)?;
+    let new = download_checksum(url).await?;
 
     Ok(existing == new)
 }
 
-pub fn download_checksum(url: &str) -> Result<String, String> {
-    let checksum = reqwest::blocking::get(format!("{url}.sha256"))
+pub async fn download_checksum(url: &str) -> Result<String, String> {
+    let checksum = reqwest::get(format!("{url}.sha256"))
+        .await
         .map_err(|e| format!("failed to download checksum: {e}"))?
         .text()
+        .await
         .map_err(|e| format!("failed to download checksum: {e}"))?;
     Ok(checksum)
 }
 
-pub fn download_and_extract(url: &str, dir: impl AsRef<Path>) -> Result<(), String> {
+pub async fn download_and_extract(url: &str, dir: impl AsRef<Path>) -> Result<(), String> {
     _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).map_err(|e| format!("failed to create CEF dir: {e}"))?;
 
-    let data = reqwest::blocking::get(url)
-        .and_then(|r| r.bytes())
-        .and_then(|b| Ok(b.to_vec()))
-        .map_err(|e| format!("failed to download CEF: {e}"))?;
+    let data = reqwest::get(url)
+        .await
+        .map_err(|e| format!("failed to download CEF: {e}"))?
+        .bytes()
+        .await
+        .map_err(|e| format!("failed to download CEF: {e}"))?
+        .to_vec();
 
     ZipArchive::new(Cursor::new(data))
         .and_then(|mut archive| archive.extract(&dir))
@@ -94,7 +99,7 @@ pub fn download_and_extract(url: &str, dir: impl AsRef<Path>) -> Result<(), Stri
             )
         })?;
 
-    let checksum = download_checksum(url)?;
+    let checksum = download_checksum(url).await?;
     fs::write(dir.as_ref().join("checksum"), checksum)
         .map_err(|e| format!("failed to save checksum: {e}"))?;
 
