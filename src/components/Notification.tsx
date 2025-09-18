@@ -30,7 +30,9 @@ export default function Notification(props: NotificationProps) {
             height: '100vh',
             padding: '20px',
             'text-align': 'center',
-            'background-color': '#f5f5f5'
+            'background-color': '#f5f5f5',
+            '-webkit-user-select': 'auto',
+            'user-select': 'auto',
         }}>
             <h2 style={{ color: getColor(), 'margin-bottom': '16px' }}>
                 {getTitle()}

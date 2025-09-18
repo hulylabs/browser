@@ -13,6 +13,8 @@ export class Shortcuts {
     shortcuts: Map<Shortcut, ActionID> = new Map();
     actions: Map<ActionID, Action> = new Map();
 
+    private isMac = navigator.userAgent.toLowerCase().includes("mac");
+
     constructor(app: AppState) {
         window.addEventListener("keydown", (e) => {
             let shortcut = this.eventToShortcut(e);
@@ -32,14 +34,16 @@ export class Shortcuts {
             }
         });
 
-        this.shortcuts.set("ctrl+t", "newTab");
-        this.shortcuts.set("ctrl+w", "closeTab");
-        this.shortcuts.set("ctrl+a", "selectAll");
-        this.shortcuts.set("ctrl+c", "copy");
-        this.shortcuts.set("ctrl+v", "paste");
-        this.shortcuts.set("ctrl+x", "cut");
-        this.shortcuts.set("ctrl+z", "undo");
-        this.shortcuts.set("ctrl+y", "redo");
+        let modifier = this.isMac ? "meta" : "ctrl";
+
+        this.shortcuts.set(`${modifier}+t`, "newTab");
+        this.shortcuts.set(`${modifier}+w`, "closeTab");
+        this.shortcuts.set(`${modifier}+a`, "selectAll");
+        this.shortcuts.set(`${modifier}+c`, "copy");
+        this.shortcuts.set(`${modifier}+v`, "paste");
+        this.shortcuts.set(`${modifier}+x`, "cut");
+        this.shortcuts.set(`${modifier}+z`, "undo");
+        this.shortcuts.set(`${modifier}+y`, "redo");
         this.shortcuts.set("alt+g", "focusOnAddressBar");
         this.shortcuts.set("ctrl+tab", "nextTab");
         this.shortcuts.set("ctrl+shift+tab", "previousTab");

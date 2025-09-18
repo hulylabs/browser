@@ -1,10 +1,10 @@
 import { createSignal, onMount, Show } from "solid-js";
 import { AppEvent, AppState, Arguments, initializeApp } from "./state/state";
-import Browser from "./components/Browser";
+import Browser from "./components/browser/Browser";
 import Notification from "./components/Notification";
 import "./App.css";
 import { invoke } from "@tauri-apps/api/core";
-import Sidebar from "./components/sidebar";
+import Sidebar from "./components/sidebar/Layout";
 
 
 function App() {

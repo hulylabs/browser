@@ -1,0 +1,76 @@
+.overlay {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    z-index: 1000;
+}
+
+.searchContainer {
+    display: flex;
+    flex-direction: column;
+    width: clamp(400px, 70%, 600px);
+    border-radius: 10px;
+    background: #ededed;
+    box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.2);
+    border: 1px solid #ccc;
+}
+
+%flexContainer {
+    display: flex;
+    align-items: center;
+}
+
+.inputContainer {
+    @extend %flexContainer;
+}
+
+.icon {
+    color: #666;
+    margin: 0px 15px;
+}
+
+.input {
+    flex: 1;
+    font-size: 1.2rem;
+    padding: 15px 0px;
+    outline: none;
+    border: none;
+    background: transparent;
+
+    &::placeholder {
+        color: #888;
+    }
+}
+
+.separator {
+    margin: 2px 5px;
+    border: 1px solid #ccc;
+}
+
+.historyContainer {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.historyItem {
+    @extend %flexContainer;
+    padding: 12px 0px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #f5f5f5;
+    }
+}
+
+
+.historyText {
+    flex: 1;
+    font-size: 1rem;
+    color: #333;
+}
