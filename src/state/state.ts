@@ -5,6 +5,8 @@ import { isURL, isFQDN } from "validator";
 import { invoke } from "@tauri-apps/api/core";
 import { Accessor, createSignal, Setter } from "solid-js";
 import { Shortcuts } from "./shortcuts";
+import { DownloadProgress } from "cef-client/dist/event_stream";
+import { Downloads } from "./downloads";
 
 type TabId = number;
 
@@ -43,6 +45,7 @@ export interface TabState {
 export class AppState {
     private client: Browser;
 
+    downloads: Downloads;
     shortcuts: Shortcuts;
     profiles: ProfileManager | undefined;
 
@@ -58,6 +61,7 @@ export class AppState {
     constructor(client: Browser, profiles?: ProfileManager) {
         this.client = client;
 
+        this.downloads = new Downloads();
         this.shortcuts = new Shortcuts(this);
         this.profiles = profiles;
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
@@ -243,6 +247,16 @@ export class AppState {
             this.setTabs(t => t.id === id, "isLoading", state.status === LoadStatus.Loading);
             this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
             this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
+        });
+        events.on("DownloadProgress", (progress: DownloadProgress) => {
+            this.downloads.addItem({
+                id: progress.id,
+                path: progress.path,
+                received: progress.received,
+                total: progress.total,
+                is_complete: progress.is_complete,
+                is_aborted: progress.is_aborted
+            });
         });
 
         let state: TabState = {
