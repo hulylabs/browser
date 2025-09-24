@@ -28,8 +28,10 @@ const CEF_URL: &str =
 
 #[cfg(target_os = "linux")]
 const CEF_EXE: &str = "huly-cef-websockets";
-#[cfg(target_os = "macos")]
-const CEF_EXE: &str = "huly-cef-websockets.app/Contents/MacOS/huly-cef-websockets";
+#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+const CEF_EXE: &str = "huly-cef-websockets-arm64.app/Contents/MacOS/huly-cef-websockets";
+#[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+const CEF_EXE: &str = "huly-cef-websockets-x86_64.app/Contents/MacOS/huly-cef-websockets";
 #[cfg(target_os = "windows")]
 const CEF_EXE: &str = "huly-cef-websockets.exe";
 
