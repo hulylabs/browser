@@ -124,7 +124,7 @@ class InputHandler {
     canvas.onmousemove = (e) => connection.page.mouseMove(e.offsetX, e.offsetY);
     canvas.onmousedown = (e) => connection.page.click(e.offsetX, e.offsetY, e.button, true);
     canvas.onmouseup = (e) => connection.page.click(e.offsetX, e.offsetY, e.button, false);
-    canvas.onwheel = (e) => connection.page.scroll(e.offsetX, e.offsetY, -e.deltaX, e.deltaY);
+    canvas.onwheel = (e) => connection.page.scroll(e.offsetX, e.offsetY, -e.deltaX, -e.deltaY);
 
     canvas.onkeydown = (e) => {
       if (app.shortcuts.checkShortcutConflict(e)) return;
