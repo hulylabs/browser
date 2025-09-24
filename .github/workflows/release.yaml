@@ -22,6 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check Release Exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
+          echo "Releasing version: $VERSION"
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists!"
+            exit 1
+          fi
+
       - name: Setup NodeJS
         uses: actions/setup-node@v4
         with:
@@ -35,17 +46,6 @@ jobs:
 
       - name: Install Node Modules
         run: npm install
-
-      - name: Check Release Exists
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          VERSION=$(jq -r '.version' src-tauri/tauri.conf.json)
-          echo "Releasing version: $VERSION"
-          if gh release view "v$VERSION" > /dev/null 2>&1; then
-            echo "Release $VERSION already exists!"
-            exit 1
-          fi
 
       - name: Build Huly Browser
         uses: tauri-apps/tauri-action@v0
@@ -87,14 +87,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup NodeJS
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
-      - name: Install Node Modules
-        run: npm install
-
       - name: Check Release Exists
         env:
           GH_TOKEN: ${{ github.token }}
@@ -105,6 +97,19 @@ jobs:
             echo "Release $VERSION already exists!"
             exit 1
           fi
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install Node Modules
+        run: npm install
+      
+      - name: Install Rust Targets
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
 
       - name: Import Apple Developer Certificate
         env:
