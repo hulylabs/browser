@@ -18,8 +18,8 @@ const CEF_RESOURCE_PATH: &str = "cef";
 
 fn main() {
     let cef_url = cef_url();
-    println!("cargo:error=Downloading CEF from {cef_url}");
     if !compare_checksums(&cef_url).unwrap_or(false) {
+        println!("cargo:error=Downloading CEF from {cef_url}");
         if let Err(e) = download_and_extract(CEF_RESOURCE_PATH, &cef_url) {
             println!("cargo:error=Error downloading and extracting CEF: {}", e);
             _ = fs::remove_dir_all(CEF_RESOURCE_PATH);
