@@ -19,9 +19,12 @@ mod utils;
 #[cfg(target_os = "linux")]
 const CEF_URL: &str =
     "https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-linux.zip";
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 const CEF_URL: &str =
-    "https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-macos.zip";
+    "https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-macos-arm64.zip";
+#[cfg(all(target_os = "macos", target_arch = "x86_64"))]
+const CEF_URL: &str =
+    "https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-macos-x86_64.zip";
 #[cfg(target_os = "windows")]
 const CEF_URL: &str =
     "https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-windows.zip";

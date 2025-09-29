@@ -1,0 +1,92 @@
+error: failed to run custom build command for `huly-browser v0.4.0 (/Users/user/repos/browser/src-tauri)`
+
+Caused by:
+  process didn't exit successfully: `/Users/user/repos/browser/src-tauri/target/debug/build/huly-browser-8af45e820a95817e/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:error=Downloading CEF from https://github.com/hulylabs/huly-cef/releases/latest/download/huly-cef-macos-arm64.zip
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+  cargo:rustc-check-cfg=cfg(desktop)
+  cargo:rustc-cfg=desktop
+  cargo:rustc-check-cfg=cfg(mobile)
+  cargo:rerun-if-changed=/Users/user/repos/browser/src-tauri/tauri.conf.json
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=huly_browser
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=
+  cargo:rustc-check-cfg=cfg(dev)
+  cargo:rustc-cfg=dev
+  cargo:PERMISSION_FILES_PATH=/Users/user/repos/browser/src-tauri/target/debug/build/huly-browser-9d04542fde9d552f/out/app-manifest/__app__-permission-files
+  cargo:rerun-if-changed=capabilities
+  cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+  cargo:rustc-env=TAURI_ENV_TARGET_TRIPLE=aarch64-apple-darwin
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/CodeResources
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/_CodeSignature/CodeResources
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/MacOS/huly-cef-websockets
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Resources/English.lproj/InfoPlist.strings
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Resources/English.lproj/MainMenu.xib
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Resources/Icon.icns
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Resources/newtab.html
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/huly-cef-websockets Helper.app/Contents/_CodeSignature/CodeResources
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/huly-cef-websockets Helper.app/Contents/MacOS/huly-cef-websockets Helper
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/huly-cef-websockets Helper.app/Contents/Info.plist
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/huly-cef-websockets Helper (Renderer).app/Contents/_CodeSignature/CodeResources
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/huly-cef-websockets Helper (Renderer).app/Contents/MacOS/huly-cef-websockets Helper (Renderer)
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/huly-cef-websockets Helper (Renderer).app/Contents/Info.plist
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/_CodeSignature/CodeResources
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/de.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/ur.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/he.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/ar.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/el.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/ja.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/fa.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/mr.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/en.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/chrome_200_percent.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/uk.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/es_419.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/gu.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/zh_CN.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/kn.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/nb.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/chrome_100_percent.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/am.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/es.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/sw.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/sl.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/pt_BR.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/da.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/et.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/it.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/bg.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/sk.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/pt_PT.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/icudtl.dat
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/sr.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/ms.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/ta.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/ml.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/sv.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/te.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/cs.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/ko.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/fil.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/snapshot_blob.bin
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/hu.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/v8_context_snapshot.arm64.bin
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/tr.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/pl.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/zh_TW.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/en_GB.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/resources.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/vi.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/lv.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/lt.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/ru.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/af.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/fr.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/fi.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/id.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/nl.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/th.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/bn.lproj/locale.pak
+  cargo:rerun-if-changed=cef/huly-cef-websockets-arm64.app/Contents/Frameworks/Chromium Embedded Framework.framework/Resources/gpu_shader_cache.bin
+  Permission denied (os error 13)
