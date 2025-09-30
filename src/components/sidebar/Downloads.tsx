@@ -6,7 +6,6 @@ import { Popover } from "@kobalte/core/popover";
 import { DownloadIcon, XIcon } from "lucide-solid";
 import { For, Show } from "solid-js";
 
-
 export default function Downloads(props: { app: AppState }) {
     const inProgressCount = () => props.app.downloads.items.filter(item => !item.is_complete && !item.is_aborted).length;
 
@@ -44,18 +43,19 @@ export default function Downloads(props: { app: AppState }) {
 
 function Download(props: { item: DownloadItem }) {
     return (
-        <div>
-            <div class={styles.downloadItem}>
-                <Progress value={(props.item.received / props.item.total) * 100} minValue={0} maxValue={100} class={styles.progress}>
-                    <div class={styles.info}>
-                        <Progress.Label class={styles.label}> {props.item.path.split("/").pop()}</Progress.Label>
-                        <Progress.ValueLabel class={styles.label} />
-                    </div>
-                    <Progress.Track class={styles.track}>
-                        <Progress.Fill class={styles.fill} />
-                    </Progress.Track>
-                </Progress>
-            </div>
-        </div >
+        <div class={styles.downloadItem}>
+            <Progress value={(props.item.received / props.item.total) * 100} minValue={0} maxValue={100} class={styles.progress}>
+                <div class={styles.info}>
+                    <Progress.Label class={styles.label}> {props.item.path.split(/[/\\]/).pop()}</Progress.Label>
+                    <Progress.ValueLabel class={styles.label} />
+                </div>
+                <Progress.Track class={styles.track}>
+                    <Progress.Fill class={styles.fill} />
+                </Progress.Track>
+            </Progress>
+            <Show when={!props.item.is_complete}>
+                <XIcon size={24} onClick={() => props.item.cancel()} />
+            </Show>
+        </div>
     )
 }

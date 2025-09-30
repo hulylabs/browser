@@ -250,13 +250,14 @@ export class AppState {
             this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
         });
         events.on("DownloadProgress", (progress: DownloadProgress) => {
-            this.downloads.addItem({
+            this.downloads.update({
                 id: progress.id,
                 path: progress.path,
                 received: progress.received,
                 total: progress.total,
                 is_complete: progress.is_complete,
-                is_aborted: progress.is_aborted
+                is_aborted: progress.is_aborted,
+                cancel: () => tab.cancelDownloading(progress.id)
             });
         });
         events.on("FileDialog", async (dialog: FileDialog) => {

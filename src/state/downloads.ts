@@ -7,6 +7,8 @@ export interface DownloadItem {
     total: number;
     is_complete: boolean;
     is_aborted: boolean;
+
+    cancel: () => void;
 }
 
 export class Downloads {
@@ -17,7 +19,12 @@ export class Downloads {
         [this.items, this.setItems] = createStore<DownloadItem[]>([]);
     }
 
-    addItem(item: DownloadItem) {
+    update(item: DownloadItem) {
+        if (item.is_aborted) {
+            this.setItems(items => items.filter(i => i.id !== item.id));
+            return;
+        }
+
         if (this.exists(item.id)) {
             this.setItems(items => items.id === item.id, item);
             return;

@@ -73,6 +73,8 @@
 }
 
 .downloadItem {
+    display: flex;
+
     margin: 5px 5px;
     background-color: rgba(100, 100, 100, 0.05);
     padding: 10px;
@@ -105,4 +107,8 @@
     width: var(--kb-progress-fill-width);
     height: 100%;
     background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.progress {
+    flex: 1;
 }
