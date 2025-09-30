@@ -54,6 +54,7 @@ pub fn run() {
     }));
     let clone = state.clone();
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(move |app| {
             app.manage(state);
             Ok(())

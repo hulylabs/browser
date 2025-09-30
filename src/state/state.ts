@@ -5,8 +5,9 @@ import { isURL, isFQDN } from "validator";
 import { invoke } from "@tauri-apps/api/core";
 import { Accessor, createSignal, Setter } from "solid-js";
 import { Shortcuts } from "./shortcuts";
-import { DownloadProgress } from "cef-client/dist/event_stream";
+import { DownloadProgress, FileDialog } from "cef-client/dist/event_stream";
 import { Downloads } from "./downloads";
+import { open } from '@tauri-apps/plugin-dialog';
 
 type TabId = number;
 
@@ -257,6 +258,19 @@ export class AppState {
                 is_complete: progress.is_complete,
                 is_aborted: progress.is_aborted
             });
+        });
+        events.on("FileDialog", async (dialog: FileDialog) => {
+            const file = await open({
+                title: dialog.title,
+                defaultPath: dialog.default_file_path,
+            });
+            if (file === null) {
+                tab.cancelFileDialog();
+            } else if (Array.isArray(file)) {
+                tab.continueFileDialog(file);
+            } else {
+                tab.continueFileDialog([file]);
+            }
         });
 
         let state: TabState = {
