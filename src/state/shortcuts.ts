@@ -38,6 +38,7 @@ export class Shortcuts {
 
         this.shortcuts.set(`${modifier}+t`, "newTab");
         this.shortcuts.set(`${modifier}+w`, "closeTab");
+        this.shortcuts.set(`${modifier}+r`, "reload");
         this.shortcuts.set(`${modifier}+a`, "selectAll");
         this.shortcuts.set(`${modifier}+c`, "copy");
         this.shortcuts.set(`${modifier}+v`, "paste");
@@ -51,6 +52,7 @@ export class Shortcuts {
 
         this.actions.set("newTab", { ctx: "global", execute: () => app.newTab() });
         this.actions.set("closeTab", { ctx: "global", execute: () => app.getActiveTab()?.close() });
+        this.actions.set("reload", { ctx: "webpage", execute: () => app.getActiveTab()?.reload() });
         this.actions.set("selectAll", { ctx: "webpage", execute: () => app.getActiveTab()?.selectAll() });
         this.actions.set("copy", { ctx: "webpage", execute: () => app.getActiveTab()?.copy() });
         this.actions.set("paste", { ctx: "webpage", execute: () => app.getActiveTab()?.paste() });
