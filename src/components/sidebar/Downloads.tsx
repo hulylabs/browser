@@ -5,6 +5,7 @@ import { DownloadItem } from "../../state/downloads";
 import { Popover } from "@kobalte/core/popover";
 import { DownloadIcon, XIcon } from "lucide-solid";
 import { For, Show } from "solid-js";
+import { invoke } from "@tauri-apps/api/core";
 
 export default function Downloads(props: { app: AppState }) {
     const inProgressCount = () => props.app.downloads.items.filter(item => !item.is_complete && !item.is_aborted).length;
@@ -42,8 +43,16 @@ export default function Downloads(props: { app: AppState }) {
 }
 
 function Download(props: { item: DownloadItem }) {
+    const handleShowInFolder = async () => {
+        try {
+            await invoke("show_in_folder", { path: props.item.path });
+        } catch (error) {
+            console.error("Failed to show file in folder:", error);
+        }
+    };
+
     return (
-        <div class={styles.downloadItem}>
+        <div class={styles.downloadItem} onClick={handleShowInFolder}>
             <Progress value={(props.item.received / props.item.total) * 100} minValue={0} maxValue={100} class={styles.progress}>
                 <div class={styles.info}>
                     <Progress.Label class={styles.label}> {props.item.path.split(/[/\\]/).pop()}</Progress.Label>

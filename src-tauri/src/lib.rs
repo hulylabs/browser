@@ -1,5 +1,6 @@
 use std::{
     net::TcpStream,
+    process::Command,
     sync::{Arc, Mutex},
 };
 
@@ -44,6 +45,37 @@ fn get_args(app_handle: tauri::AppHandle) -> Arguments {
     return state.args.clone();
 }
 
+#[tauri::command]
+fn show_in_folder(path: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .args(["-R", &path])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("explorer")
+            .args(["/select,", &path])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        if let Some(parent) = std::path::Path::new(&path).parent() {
+            Command::new("xdg-open")
+                .arg(parent)
+                .spawn()
+                .map_err(|e| e.to_string())?;
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let args = Arguments::parse();
@@ -69,6 +101,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler!(
             get_args,
+            show_in_folder,
             cef::is_cef_present,
             cef::download_cef,
             cef::launch_cef
