@@ -3,10 +3,11 @@ import { createStore, SetStoreFunction } from "solid-js/store";
 import { ProfileManager } from "./profiles";
 import { isURL, isFQDN } from "validator";
 import { invoke } from "@tauri-apps/api/core";
-import { Accessor, createSignal, Setter } from "solid-js";
+import { Setter } from "solid-js";
 import { Shortcuts } from "./shortcuts";
 import { DownloadProgress, FileDialog } from "cef-client/dist/event_stream";
 import { Downloads } from "./downloads";
+import { UIState } from "./ui";
 import { open } from '@tauri-apps/plugin-dialog';
 
 type TabId = number;
@@ -49,16 +50,11 @@ export class AppState {
     downloads: Downloads;
     shortcuts: Shortcuts;
     profiles: ProfileManager | undefined;
+    ui: UIState;
 
     tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
     connections: Map<TabId, TabConnection> = new Map();
-
-    browserFocused: Accessor<boolean>;
-    setBrowserFocused: Setter<boolean>;
-
-    private focusUrlCallback: (() => void) | null = null;
-    private showNewTabInputCallback: (() => void) | null = null;
 
     constructor(client: Browser, profiles?: ProfileManager) {
         this.client = client;
@@ -66,9 +62,8 @@ export class AppState {
         this.downloads = new Downloads();
         this.shortcuts = new Shortcuts(this);
         this.profiles = profiles;
+        this.ui = new UIState();
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
-
-        [this.browserFocused, this.setBrowserFocused] = createSignal(false);
     }
 
     async setClient(client: Browser) {
@@ -97,36 +92,7 @@ export class AppState {
         let tab = await this.client.openTab({ url })!;
         this.addTab(tab);
         this.setActiveTab(tab.id);
-        this.focusUrl();
-    }
-
-    setFocusUrlCallback(callback: () => void) {
-        this.focusUrlCallback = callback;
-    }
-
-    setShowNewTabInputCallback(callback: () => void) {
-        this.showNewTabInputCallback = callback;
-    }
-
-    focusUrl() {
-        if (this.focusUrlCallback) this.focusUrlCallback();
-    }
-
-    showNewTabInput() {
-        if (this.showNewTabInputCallback) {
-            this.showNewTabInputCallback();
-        } else {
-            console.warn("showNewTabInputCallback is not set");
-        }
-    }
-
-    isBrowserFocused(): boolean {
-        return this.browserFocused();
-    }
-
-    getStackTrace(): string {
-        const error = new Error();
-        return error.stack ?? 'No stack trace available';
+        this.ui.focusUrl();
     }
 
     getActiveTab(): TabState | undefined {

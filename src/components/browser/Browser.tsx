@@ -150,11 +150,11 @@ class InputHandler {
     }
 
     canvas.onfocus = () => {
-      app.setBrowserFocused(true);
+      app.ui.setBrowserFocused(true);
       connection.page.focus(true);
     };
     canvas.onblur = () => {
-      app.setBrowserFocused(false);
+      app.ui.setBrowserFocused(false);
       connection.page.focus(false);
     };
   }

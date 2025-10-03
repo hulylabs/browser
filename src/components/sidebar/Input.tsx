@@ -9,7 +9,7 @@ export default function Input(props: { app: AppState }) {
     let activeTabMemo = createMemo(() => props.app.getActiveTab());
 
     onMount(() => {
-        props.app.setFocusUrlCallback(() => ref.focus());
+        props.app.ui.setFocusUrlCallback(() => ref.focus());
     })
 
     createEffect(() => {

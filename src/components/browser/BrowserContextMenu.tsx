@@ -1,7 +1,7 @@
 import { ContextMenu } from "@kobalte/core/context-menu";
 import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-solid";
 import styles from "./BrowserContextMenu.module.scss";
-import { AppState } from "../state/state";
+import { AppState } from "../../state/state";
 import { createMemo, JSX, Show } from "solid-js";
 
 function BrowserContextMenu(props: { app: AppState, children: JSX.Element }) {

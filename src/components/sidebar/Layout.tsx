@@ -17,7 +17,7 @@ export default function Sidebar(props: { app: AppState }) {
     const onNewTabClick = () => setShowInput(true);
 
     onMount(() => {
-        props.app.setShowNewTabInputCallback(() => setShowInput(true));
+        props.app.ui.setShowNewTabInputCallback(() => setShowInput(true));
     });
 
     return (

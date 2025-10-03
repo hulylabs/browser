@@ -27,7 +27,7 @@ export class Shortcuts {
                     action.execute();
                 }
 
-                if (action.ctx == "webpage" && app.browserFocused()) {
+                if (action.ctx == "webpage" && app.ui.browserFocused()) {
                     e.preventDefault();
                     action.execute();
                 }
@@ -50,7 +50,7 @@ export class Shortcuts {
         this.shortcuts.set("ctrl+shift+tab", "previousTab");
         this.shortcuts.set("ctrl+shift+t", "restoreSession");
 
-        this.actions.set("showInput", { ctx: "global", execute: () => app.showNewTabInput() });
+        this.actions.set("showInput", { ctx: "global", execute: () => app.ui.showNewTabInput() });
         this.actions.set("closeTab", { ctx: "global", execute: () => app.getActiveTab()?.close() });
         this.actions.set("reload", { ctx: "webpage", execute: () => app.getActiveTab()?.reload() });
         this.actions.set("selectAll", { ctx: "webpage", execute: () => app.getActiveTab()?.selectAll() });
@@ -59,7 +59,7 @@ export class Shortcuts {
         this.actions.set("cut", { ctx: "webpage", execute: () => app.getActiveTab()?.cut() });
         this.actions.set("undo", { ctx: "webpage", execute: () => app.getActiveTab()?.undo() });
         this.actions.set("redo", { ctx: "webpage", execute: () => app.getActiveTab()?.redo() });
-        this.actions.set("focusOnAddressBar", { ctx: "global", execute: () => app.focusUrl() });
+        this.actions.set("focusOnAddressBar", { ctx: "global", execute: () => app.ui.focusUrl() });
         this.actions.set("nextTab", { ctx: "global", execute: () => app.shiftTab(true) });
         this.actions.set("previousTab", { ctx: "global", execute: () => app.shiftTab(false) });
         this.actions.set("restoreSession", { ctx: "global", execute: () => app.restore() });
