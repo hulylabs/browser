@@ -58,6 +58,7 @@ export class AppState {
     setBrowserFocused: Setter<boolean>;
 
     private focusUrlCallback: (() => void) | null = null;
+    private showNewTabInputCallback: (() => void) | null = null;
 
     constructor(client: Browser, profiles?: ProfileManager) {
         this.client = client;
@@ -103,8 +104,20 @@ export class AppState {
         this.focusUrlCallback = callback;
     }
 
+    setShowNewTabInputCallback(callback: () => void) {
+        this.showNewTabInputCallback = callback;
+    }
+
     focusUrl() {
         if (this.focusUrlCallback) this.focusUrlCallback();
+    }
+
+    showNewTabInput() {
+        if (this.showNewTabInputCallback) {
+            this.showNewTabInputCallback();
+        } else {
+            console.warn("showNewTabInputCallback is not set");
+        }
     }
 
     isBrowserFocused(): boolean {

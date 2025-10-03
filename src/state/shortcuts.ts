@@ -36,7 +36,7 @@ export class Shortcuts {
 
         let modifier = this.isMac ? "meta" : "ctrl";
 
-        this.shortcuts.set(`${modifier}+t`, "newTab");
+        this.shortcuts.set(`${modifier}+t`, "showInput");
         this.shortcuts.set(`${modifier}+w`, "closeTab");
         this.shortcuts.set(`${modifier}+r`, "reload");
         this.shortcuts.set(`${modifier}+a`, "selectAll");
@@ -50,7 +50,7 @@ export class Shortcuts {
         this.shortcuts.set("ctrl+shift+tab", "previousTab");
         this.shortcuts.set("ctrl+shift+t", "restoreSession");
 
-        this.actions.set("newTab", { ctx: "global", execute: () => app.newTab() });
+        this.actions.set("showInput", { ctx: "global", execute: () => app.showNewTabInput() });
         this.actions.set("closeTab", { ctx: "global", execute: () => app.getActiveTab()?.close() });
         this.actions.set("reload", { ctx: "webpage", execute: () => app.getActiveTab()?.reload() });
         this.actions.set("selectAll", { ctx: "webpage", execute: () => app.getActiveTab()?.selectAll() });

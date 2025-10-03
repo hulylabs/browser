@@ -1,4 +1,4 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createResource, createSignal, For, Show, onMount } from "solid-js";
 import { ResizablePane } from "../ResizablePane";
 import TabControls from "./TabControls";
 import Input from "./Input";
@@ -15,6 +15,10 @@ export default function Sidebar(props: { app: AppState }) {
 
     const [showInput, setShowInput] = createSignal(false);
     const onNewTabClick = () => setShowInput(true);
+
+    onMount(() => {
+        props.app.setShowNewTabInputCallback(() => setShowInput(true));
+    });
 
     return (
         <>
