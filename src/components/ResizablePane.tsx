@@ -1,4 +1,5 @@
 import { Accessor, createContext, createSignal, onCleanup, onMount, Setter, useContext } from "solid-js";
+import styles from "./ResizablePane.module.scss";
 
 interface ResizablePaneContextValue {
     width: Accessor<number>,
@@ -84,14 +85,8 @@ function Handle() {
 
     return (
         <div
-            class="sidebar-handle"
+            class={`sidebar-handle ${styles.handle}`}
             onMouseDown={handleMouseDown}
-            style={{
-                cursor: "col-resize",
-                width: "4px",
-                background: "#ccc",
-                height: "100%"
-            }}
         />
     );
 }

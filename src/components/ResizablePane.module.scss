@@ -1,0 +1,11 @@
+.handle {
+    cursor: col-resize;
+    width: 3px;
+    background: transparent;
+    height: 100%;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background: #7192ff;
+    }
+}

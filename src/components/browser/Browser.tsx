@@ -154,7 +154,6 @@ class InputHandler {
       connection.page.focus(true);
     };
     canvas.onblur = () => {
-      console.log("canvas blurred");
       app.setBrowserFocused(false);
       connection.page.focus(false);
     };

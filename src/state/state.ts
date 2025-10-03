@@ -122,9 +122,9 @@ export class AppState {
 
     setActiveTab(tabId: TabId) {
         let activeTab = this.getActiveTab();
-        if (activeTab) {
-            this.setActive(activeTab.id, false);
-        }
+
+        if (activeTab && activeTab.id === tabId) return;
+        if (activeTab) this.setActive(activeTab.id, false);
 
         this.setActive(tabId, true);
     }
