@@ -47,14 +47,16 @@ function Download(props: { item: DownloadItem }) {
             <Progress value={(props.item.received / props.item.total) * 100} minValue={0} maxValue={100} class={styles.progress}>
                 <div class={styles.info}>
                     <Progress.Label class={styles.label}> {props.item.path.split(/[/\\]/).pop()}</Progress.Label>
-                    <Progress.ValueLabel class={styles.label} />
+                    <Show when={!props.item.is_complete} fallback={<span class={styles.label}>Done</span>}>
+                        <Progress.ValueLabel class={styles.label} />
+                    </Show>
                 </div>
                 <Progress.Track class={styles.track}>
                     <Progress.Fill class={styles.fill} />
                 </Progress.Track>
             </Progress>
             <Show when={!props.item.is_complete}>
-                <XIcon size={24} onClick={() => props.item.cancel()} />
+                <XIcon size={24} onClick={(e) => { e.stopPropagation(); props.item.cancel(); }} />
             </Show>
         </div>
     )
