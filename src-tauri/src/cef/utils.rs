@@ -40,14 +40,19 @@ pub fn get_cef_paths(app_handle: &tauri::AppHandle) -> Result<(PathBuf, PathBuf)
 }
 
 pub fn wait_for_cef(port: u16) -> Result<(), String> {
+    let mut last_error = String::new();
+
     for _ in 0..10 {
         std::thread::sleep(std::time::Duration::from_millis(500));
-        if connect(format!("ws://localhost:{}", port)).is_ok() {
-            return Ok(());
+        match connect(format!("ws://localhost:{}", port)) {
+            Ok(_) => return Ok(()),
+            Err(e) => {
+                last_error = format!("CEF healthcheck failed: {}", e);
+            }
         }
     }
 
-    Err("CEF healthcheck failed".into())
+    Err(last_error)
 }
 
 pub fn find_available_port() -> Result<u16, String> {
