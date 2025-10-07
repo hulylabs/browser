@@ -136,7 +136,7 @@ class InputHandler {
         if (e.key.length === 1) {
           unicode = e.key.charCodeAt(0);
         }
-        connection.page.key(keyCode, unicode, true, e.ctrlKey, e.shiftKey);
+        connection.page.key(keyCode, unicode, true, e.ctrlKey, e.shiftKey, e.altKey, e.metaKey);
       }
     }
     canvas.onkeyup = (e) => {
