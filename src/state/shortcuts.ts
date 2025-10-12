@@ -48,7 +48,6 @@ export class Shortcuts {
         this.shortcuts.set("alt+g", "focusOnAddressBar");
         this.shortcuts.set("ctrl+tab", "nextTab");
         this.shortcuts.set("ctrl+shift+tab", "previousTab");
-        this.shortcuts.set("ctrl+shift+t", "restoreSession");
 
         this.actions.set("showInput", { ctx: "global", execute: () => app.ui.showNewTabInput() });
         this.actions.set("closeTab", { ctx: "global", execute: () => app.getActiveTab()?.close() });
@@ -62,7 +61,6 @@ export class Shortcuts {
         this.actions.set("focusOnAddressBar", { ctx: "global", execute: () => app.ui.focusUrl() });
         this.actions.set("nextTab", { ctx: "global", execute: () => app.shiftTab(true) });
         this.actions.set("previousTab", { ctx: "global", execute: () => app.shiftTab(false) });
-        this.actions.set("restoreSession", { ctx: "global", execute: () => app.restore() });
     }
 
     checkShortcutConflict(e: KeyboardEvent): boolean {

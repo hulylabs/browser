@@ -18,7 +18,7 @@ function App() {
     setApp(app);
 
     getCurrentWindow().listen("tauri://close-requested", async (_) => {
-      await app.close();
+      await app.save();
       await getCurrentWindow().destroy();
     });
   });

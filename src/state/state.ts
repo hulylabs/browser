@@ -47,7 +47,6 @@ export interface TabState {
     redo: () => void;
 }
 
-
 export class AppState {
     private client: Browser;
 
@@ -72,7 +71,7 @@ export class AppState {
         this.restore(client);
     }
 
-    async close() {
+    async save() {
         const tabs = JSON.stringify(this.tabs);
         if (!await exists('', { baseDir: BaseDirectory.AppData })) {
             await mkdir('', { baseDir: BaseDirectory.AppData });
@@ -174,42 +173,6 @@ export class AppState {
         this.connections.get(tabId)?.page.navigate(url);
     }
 
-    back(tabId: TabId) {
-        this.connections.get(tabId)?.page.back();
-    }
-
-    forward(tabId: TabId) {
-        this.connections.get(tabId)?.page.forward();
-    }
-
-    reload(tabId: TabId) {
-        this.connections.get(tabId)?.page.reload();
-    }
-
-    selectAll(tabId: TabId) {
-        this.connections.get(tabId)?.page.selectAll();
-    }
-
-    copy(tabId: TabId) {
-        this.connections.get(tabId)?.page.copy();
-    }
-
-    paste(tabId: TabId) {
-        this.connections.get(tabId)?.page.paste();
-    }
-
-    cut(tabId: TabId) {
-        this.connections.get(tabId)?.page.cut();
-    }
-
-    undo(tabId: TabId) {
-        this.connections.get(tabId)?.page.undo();
-    }
-
-    redo(tabId: TabId) {
-        this.connections.get(tabId)?.page.redo();
-    }
-
     private setActive(id: TabId, active: boolean) {
         let tab = this.tabs.find(t => t.id === id);
         if (!tab) {
@@ -291,16 +254,16 @@ export class AppState {
             goTo: (url: string) => this.navigate(id, url),
             activate: () => this.setActiveTab(tab.id),
             close: () => this.closeTab(tab.id),
-            goBack: () => this.back(id),
-            goForward: () => this.forward(id),
-            reload: () => this.reload(id),
+            goBack: () => this.connections.get(id)?.page.back(),
+            goForward: () => this.connections.get(id)?.page.forward(),
+            reload: () => this.connections.get(id)?.page.reload(),
 
-            selectAll: () => this.selectAll(id),
-            copy: () => this.copy(id),
-            paste: () => this.paste(id),
-            cut: () => this.cut(id),
-            undo: () => this.undo(id),
-            redo: () => this.redo(id),
+            selectAll: () => this.connections.get(id)?.page.selectAll(),
+            copy: () => this.connections.get(id)?.page.copy(),
+            paste: () => this.connections.get(id)?.page.paste(),
+            cut: () => this.connections.get(id)?.page.cut(),
+            undo: () => this.connections.get(id)?.page.undo(),
+            redo: () => this.connections.get(id)?.page.redo(),
         };
 
         this.setTabs((prev) => [...prev, state]);
