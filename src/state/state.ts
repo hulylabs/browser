@@ -9,6 +9,8 @@ import { DownloadProgress, FileDialog } from "cef-client/dist/event_stream";
 import { Downloads } from "./downloads";
 import { UIState } from "./ui";
 import { open } from '@tauri-apps/plugin-dialog';
+import { BaseDirectory } from "@tauri-apps/api/path";
+import { exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
 type TabId = number;
 
@@ -27,6 +29,8 @@ export interface TabState {
     canGoForward: boolean;
     isLoading: boolean;
     hoveredUrl: string;
+
+    pinned: boolean;
 
     goTo: (url: string) => void;
     activate: () => void;
@@ -64,6 +68,16 @@ export class AppState {
         this.profiles = profiles;
         this.ui = new UIState();
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
+
+        this.restore(client);
+    }
+
+    async close() {
+        const tabs = JSON.stringify(this.tabs);
+        if (!await exists('', { baseDir: BaseDirectory.AppData })) {
+            await mkdir('', { baseDir: BaseDirectory.AppData });
+        }
+        writeTextFile('tabs.json', tabs, { baseDir: BaseDirectory.AppData });
     }
 
     async setClient(client: Browser) {
@@ -78,10 +92,18 @@ export class AppState {
         setInterval(async () => await this.fetchTabs(), 5000);
     }
 
-    async restore() {
-        let tabs = await this.client.restore();
-        tabs.forEach(tab => this.addTab(tab));
-        this.setActive(tabs[0].id, true);
+    async restore(client: Browser) {
+        try {
+            let content = await readTextFile('tabs.json', { baseDir: BaseDirectory.AppData });
+            const tabs: TabState[] = JSON.parse(content);
+            for (let tab of tabs) {
+                let newTab = await client.openTab({ url: tab.url });
+                this.addTab(newTab, tab);
+            }
+        } catch (err) {
+            let huly = await client.openTab({ url: "https://front.hc.engineering/" });
+            this.addTab(huly, { active: true, pinned: true });
+        }
     }
 
     async newTab(searchString?: string) {
@@ -209,7 +231,7 @@ export class AppState {
         }
     }
 
-    private addTab(tab: Tab) {
+    private addTab(tab: Tab, partial: Partial<TabState> = {}) {
         let id = tab.id;
         let events = tab.events();
 
@@ -255,14 +277,16 @@ export class AppState {
 
         let state: TabState = {
             id: id,
-            title: "New Tab",
-            url: "",
-            favicon: "",
-            active: false,
+            title: partial.title || "New Tab",
+            url: partial.url || "",
+            favicon: partial.favicon || "",
+            active: partial.active || false,
             canGoBack: false,
             canGoForward: false,
             isLoading: false,
             hoveredUrl: "",
+
+            pinned: partial.pinned || false,
 
             goTo: (url: string) => this.navigate(id, url),
             activate: () => this.setActiveTab(tab.id),

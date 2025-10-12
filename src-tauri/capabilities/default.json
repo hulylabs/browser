@@ -13,7 +13,21 @@
     "core:resources:default",
     "core:menu:default",
     "core:tray:default",
-    "core:window:allow-set-title",
-    "dialog:default"
+    "core:window:allow-close",
+    "core:window:allow-destroy",
+    "dialog:default",
+    "fs:default",
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        }
+      ]
+    },
+    "fs:allow-appdata-write",
+    "fs:allow-appdata-read",
+    "fs:allow-appdata-write-recursive",
+    "fs:allow-appdata-read-recursive"
   ]
 }

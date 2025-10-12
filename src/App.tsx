@@ -5,7 +5,7 @@ import Notification from "./components/Notification";
 import "./App.css";
 import { invoke } from "@tauri-apps/api/core";
 import Sidebar from "./components/sidebar/Layout";
-
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 function App() {
   let [event, setEvent] = createSignal<AppEvent>({ message: "Initializing App", type: "info" });
@@ -16,6 +16,11 @@ function App() {
     let app = await initializeApp(args, setEvent);
     if (!app) return;
     setApp(app);
+
+    getCurrentWindow().listen("tauri://close-requested", async (_) => {
+      await app.close();
+      await getCurrentWindow().destroy();
+    });
   });
 
   return (

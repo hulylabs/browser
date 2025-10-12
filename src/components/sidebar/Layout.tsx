@@ -9,9 +9,12 @@ import { getVersion } from "@tauri-apps/api/app";
 import styles from "./Layout.module.scss"
 import { NewTabInput } from "./NewTabInput";
 import Downloads from "./Downloads";
+import Bookmarks from "./Bookmarks";
 
 export default function Sidebar(props: { app: AppState }) {
     const [version] = createResource(getVersion);
+
+    const tabs = () => props.app.tabs.filter(t => !t.pinned);
 
     const [showInput, setShowInput] = createSignal(false);
     const onNewTabClick = () => setShowInput(true);
@@ -26,6 +29,7 @@ export default function Sidebar(props: { app: AppState }) {
                 <ResizablePane.Content class={styles.content}>
                     <div class={styles.header}>
                         <TabControls app={props.app} />
+                        <Bookmarks app={props.app} />
                         <Input app={props.app} />
                         <Show when={props.app.profiles}>
                             <Profiles app={props.app} />
@@ -35,7 +39,7 @@ export default function Sidebar(props: { app: AppState }) {
                         </div>
                     </div>
                     <div class={styles.tabs}>
-                        <For each={props.app.tabs}>{(tab) => (
+                        <For each={tabs()}>{(tab) => (
                             <Tab tab={tab} />
                         )}
                         </For>
