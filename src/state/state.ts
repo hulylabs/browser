@@ -8,6 +8,7 @@ import { Shortcuts } from "./shortcuts";
 import { DownloadProgress, FileDialog } from "cef-client/dist/event_stream";
 import { Downloads } from "./downloads";
 import { UIState } from "./ui";
+import { Bookmarks } from "./bookmarks";
 import { open } from '@tauri-apps/plugin-dialog';
 import { BaseDirectory } from "@tauri-apps/api/path";
 import { exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
@@ -45,6 +46,8 @@ export interface TabState {
     cut: () => void;
     undo: () => void;
     redo: () => void;
+
+    pin: () => void;
 }
 
 export class AppState {
@@ -52,6 +55,7 @@ export class AppState {
 
     downloads: Downloads;
     shortcuts: Shortcuts;
+    bookmarks: Bookmarks;
     profiles: ProfileManager | undefined;
     ui: UIState;
 
@@ -64,19 +68,13 @@ export class AppState {
 
         this.downloads = new Downloads();
         this.shortcuts = new Shortcuts(this);
+        this.bookmarks = new Bookmarks();
         this.profiles = profiles;
         this.ui = new UIState();
+
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
 
         this.restore(client);
-    }
-
-    async save() {
-        const tabs = JSON.stringify(this.tabs);
-        if (!await exists('', { baseDir: BaseDirectory.AppData })) {
-            await mkdir('', { baseDir: BaseDirectory.AppData });
-        }
-        writeTextFile('tabs.json', tabs, { baseDir: BaseDirectory.AppData });
     }
 
     async setClient(client: Browser) {
@@ -91,17 +89,34 @@ export class AppState {
         setInterval(async () => await this.fetchTabs(), 5000);
     }
 
+    async save() {
+        if (!await exists('', { baseDir: BaseDirectory.AppData })) {
+            await mkdir('', { baseDir: BaseDirectory.AppData });
+        }
+
+        const current = this.tabs.filter(tab => !tab.pinned);
+        console.log("Saving tabs:", current);
+        await writeTextFile('tabs.json', JSON.stringify(current), { baseDir: BaseDirectory.AppData });
+        await this.bookmarks.save();
+    }
+
     async restore(client: Browser) {
         try {
+            await this.bookmarks.load();
             let content = await readTextFile('tabs.json', { baseDir: BaseDirectory.AppData });
-            const tabs: TabState[] = JSON.parse(content);
+            const tabs = JSON.parse(content);
+
+            for (let bookmark of this.bookmarks.all()) {
+                let newTab = await client.openTab({ url: bookmark.url });
+                this.addTab(newTab, { title: bookmark.title, url: bookmark.url, favicon: bookmark.favicon, pinned: true });
+            }
+
             for (let tab of tabs) {
                 let newTab = await client.openTab({ url: tab.url });
                 this.addTab(newTab, tab);
             }
         } catch (err) {
-            let huly = await client.openTab({ url: "https://front.hc.engineering/" });
-            this.addTab(huly, { active: true, pinned: true });
+            console.error("Error restoring tabs:", err);
         }
     }
 
@@ -171,6 +186,14 @@ export class AppState {
     navigate(tabId: TabId, searchString: string) {
         let url = this.processSearchString(searchString);
         this.connections.get(tabId)?.page.navigate(url);
+    }
+
+    pinTab(tabId: TabId) {
+        const tab = this.tabs.find(t => t.id === tabId);
+        if (!tab || tab.pinned) return;
+
+        this.bookmarks.add(tab.title, tab.url, tab.favicon);
+        this.setTabs(t => t.id === tabId, "pinned", true);
     }
 
     private setActive(id: TabId, active: boolean) {
@@ -264,6 +287,8 @@ export class AppState {
             cut: () => this.connections.get(id)?.page.cut(),
             undo: () => this.connections.get(id)?.page.undo(),
             redo: () => this.connections.get(id)?.page.redo(),
+
+            pin: () => this.pinTab(id),
         };
 
         this.setTabs((prev) => [...prev, state]);

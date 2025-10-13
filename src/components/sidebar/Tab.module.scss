@@ -16,13 +16,13 @@
         background-color: white;
     }
 
-    &:hover .close {
+    &:hover .control {
         visibility: visible;
     }
 
 }
 
-.tabInfo {
+.info {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -35,7 +35,7 @@
     max-width: 100%;
 }
 
-.tabTitle {
+.title {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -59,7 +59,12 @@
     }
 }
 
-.close {
+.controls {
+    display: flex;
+    align-items: center;
+}
+
+.control {
     min-width: 24px;
     min-height: 24px;
     width: 24px;
