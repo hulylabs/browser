@@ -12,7 +12,7 @@ export function NewTabInput(props: { app: AppState, close: () => void }) {
     const searchHistory = [
         "github.com",
         "stackoverflow.com",
-        "developer.mozilla.org",
+        "vantajs.com",
         "typescript handbook",
         "solid-js documentation",
         "css grid tutorial",
