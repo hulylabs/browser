@@ -305,11 +305,10 @@ export class AppState {
     }
 
     private processSearchString(searchString: string) {
-        let is1 = isFQDN(searchString);
-        // TODO: We need to accept any protocol
-        let is2 = isURL(searchString, { protocols: ["http", "https", "huly", "file", "tg"], require_tld: false, require_host: false });
+        let fqdn = isFQDN(searchString);
+        let url = isURL(searchString, { require_tld: false, require_protocol: true, require_valid_protocol: false });
 
-        if (is1 || is2) {
+        if (fqdn || url) {
             return searchString;
         }
         return `https://www.google.com/search?q=${searchString}`;
