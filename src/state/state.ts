@@ -47,6 +47,7 @@ export interface TabState {
     redo: () => void;
 
     pin: () => void;
+    unpin: () => void;
 }
 
 export class AppState {
@@ -196,6 +197,14 @@ export class AppState {
         this.setTabs(t => t.id === tabId, "pinned", true);
     }
 
+    unpinTab(tabId: TabId) {
+        const tab = this.tabs.find(t => t.id === tabId);
+        if (!tab || !tab.pinned) return;
+
+        this.bookmarks.remove(tab.url);
+        this.setTabs(t => t.id === tabId, "pinned", false);
+    }
+
     private setActive(id: TabId, active: boolean) {
         let tab = this.tabs.find(t => t.id === id);
         if (!tab) {
@@ -299,6 +308,7 @@ export class AppState {
             redo: () => this.connections.get(id)?.page.redo(),
 
             pin: () => this.pinTab(id),
+            unpin: () => this.unpinTab(id),
         };
 
         this.setTabs((prev) => [...prev, state]);

@@ -32,6 +32,10 @@ export class Bookmarks {
         this.bookmarks.push(bookmark);
     }
 
+    remove(url: string): void {
+        this.bookmarks = this.bookmarks.filter(bookmark => bookmark.url !== url);
+    }
+
     async save(): Promise<void> {
         await writeTextFile('bookmarks.json', JSON.stringify(this.bookmarks), { baseDir: BaseDirectory.AppData });
     }
