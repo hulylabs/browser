@@ -1,15 +1,14 @@
-import { Browser, connect, LoadState, LoadStatus, Tab, TabEventStream } from "cef-client";
+import { Browser, connect, LoadState, LoadStatus, Tab, TabEventStream, DownloadProgress, FileDialog } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { ProfileManager } from "./profiles";
 import { isURL, isFQDN } from "validator";
 import { invoke } from "@tauri-apps/api/core";
 import { Setter } from "solid-js";
 import { Shortcuts } from "./shortcuts";
-import { DownloadProgress, FileDialog } from "cef-client/dist/event_stream";
 import { Downloads } from "./downloads";
 import { UIState } from "./ui";
 import { Bookmarks } from "./bookmarks";
-import { open } from '@tauri-apps/plugin-dialog';
+import { confirm, open } from '@tauri-apps/plugin-dialog';
 import { BaseDirectory } from "@tauri-apps/api/path";
 import { exists, mkdir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
@@ -52,6 +51,7 @@ export interface TabState {
 
 export class AppState {
     private client: Browser;
+
 
     downloads: Downloads;
     shortcuts: Shortcuts;
@@ -236,6 +236,16 @@ export class AppState {
             this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
             this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
         });
+        events.on("ExternalLink", async (url: string) => {
+            if (url !== "") {
+                let confirmed = await confirm("Open external link? (" + url + ")");
+                if (confirmed) {
+                    invoke("open_link", { url: url }).catch((e) => {
+                        console.error("Failed to open external link:", e);
+                    });
+                }
+            }
+        });
         events.on("DownloadProgress", (progress: DownloadProgress) => {
             this.downloads.update({
                 id: progress.id,
@@ -296,7 +306,8 @@ export class AppState {
 
     private processSearchString(searchString: string) {
         let is1 = isFQDN(searchString);
-        let is2 = isURL(searchString, { protocols: ["http", "https", "huly", "file"], require_tld: false, require_host: false });
+        // TODO: We need to accept any protocol
+        let is2 = isURL(searchString, { protocols: ["http", "https", "huly", "file", "tg"], require_tld: false, require_host: false });
 
         if (is1 || is2) {
             return searchString;

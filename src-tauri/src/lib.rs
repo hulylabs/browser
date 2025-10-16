@@ -76,6 +76,35 @@ fn show_in_folder(path: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn open_link(url: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("Failed to open link on macOS: {}", e))?;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("cmd")
+            .args(["/C", "start", "", &url])
+            .spawn()
+            .map_err(|e| format!("Failed to open link on Windows: {}", e))?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        Command::new("xdg-open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| format!("Failed to open link on Linux: {}", e))?;
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let args = Arguments::parse();
@@ -103,6 +132,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler!(
             get_args,
             show_in_folder,
+            open_link,
             cef::is_cef_present,
             cef::download_cef,
             cef::launch_cef
