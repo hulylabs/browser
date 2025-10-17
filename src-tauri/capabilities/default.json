@@ -28,6 +28,7 @@
     "fs:allow-appdata-write",
     "fs:allow-appdata-read",
     "fs:allow-appdata-write-recursive",
-    "fs:allow-appdata-read-recursive"
+    "fs:allow-appdata-read-recursive",
+    "log:default"
   ]
 }
