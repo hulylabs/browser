@@ -96,7 +96,6 @@ export class AppState {
         }
 
         const current = this.tabs.filter(tab => !tab.pinned);
-        console.log("Saving tabs:", current);
         await writeTextFile('tabs.json', JSON.stringify(current), { baseDir: BaseDirectory.AppData });
         await this.bookmarks.save();
     }
