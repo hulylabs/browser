@@ -6,7 +6,7 @@ import { AppState } from "../../state/state";
 export default function Input(props: { app: AppState }) {
     let ref!: HTMLInputElement;
     let [input, setInput] = createSignal<string>("");
-    let activeTabMemo = createMemo(() => props.app.getActiveTab());
+    let activeTabMemo = createMemo(() => props.app.tabs.getActive());
 
     onMount(() => {
         props.app.ui.setFocusUrlCallback(() => ref.focus());
@@ -30,7 +30,7 @@ export default function Input(props: { app: AppState }) {
             if (activeTab)
                 activeTab.goTo(url);
             else
-                props.app.newTab(url);
+                props.app.tabs.new(url);
         }
     }
 

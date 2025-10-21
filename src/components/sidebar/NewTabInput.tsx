@@ -24,14 +24,14 @@ export function NewTabInput(props: { app: AppState, close: () => void }) {
         if (e.key === "Enter") {
             e.preventDefault();
             let url = input();
-            props.app.newTab(url);
+            props.app.tabs.new(url);
             setInput("");
             props.close();
         }
     }
 
     const handleHistoryClick = (historyItem: string) => {
-        props.app.newTab(historyItem);
+        props.app.tabs.new(historyItem);
         props.close();
     }
 

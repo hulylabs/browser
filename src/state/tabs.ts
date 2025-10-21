@@ -1,12 +1,26 @@
 import { BaseDirectory, writeTextFile } from "@tauri-apps/plugin-fs";
-import { confirm, open } from '@tauri-apps/plugin-dialog';
-import { invoke } from "@tauri-apps/api/core";
 import { Browser, DownloadProgress, FileDialog, LoadState, LoadStatus, Tab, TabEventStream } from "cef-client";
 import { createStore, SetStoreFunction } from "solid-js/store";
 import { processSearchString } from "./utils";
-import { AppConfig } from "./config";
 
 type TabId = number;
+
+export interface TabCallbacks {
+    onBookmarkAdd: (title: string, url: string, favicon: string) => void;
+    onBookmarkRemove: (url: string) => void;
+    onDownloadUpdate: (download: {
+        id: number;
+        path: string;
+        received: number;
+        total: number;
+        is_complete: boolean;
+        is_aborted: boolean;
+        cancel: () => void;
+    }) => void;
+    onUIFocusUrl: () => void;
+    onExternalLink: (url: string) => Promise<void>;
+    onFileDialog: (dialog: FileDialog, tab: Tab) => Promise<void>;
+}
 
 export interface TabConnection {
     page: Tab;
@@ -46,16 +60,16 @@ export interface TabState {
 
 
 export class Tabs {
-    private config: AppConfig;
     private client: Browser;
+    private callbacks: TabCallbacks;
 
-    tabs: TabState[];
+    private tabs: TabState[];
     setTabs: SetStoreFunction<TabState[]>;
     connections: Map<TabId, TabConnection> = new Map();
 
-    constructor(config: AppConfig, client: Browser) {
-        this.config = config;
+    constructor(client: Browser, callbacks: TabCallbacks) {
         this.client = client;
+        this.callbacks = callbacks;
 
         [this.tabs, this.setTabs] = createStore<TabState[]>([]);
     }
@@ -68,12 +82,25 @@ export class Tabs {
         let tab = await this.client.openTab({ url })!;
         this.add(tab);
         this.activate(tab.id);
-        this.ui.focusUrl();
+        this.callbacks.onUIFocusUrl();
     }
 
     async save() {
         const current = this.tabs.filter(tab => !tab.pinned);
         await writeTextFile('tabs.json', JSON.stringify(current), { baseDir: BaseDirectory.AppData });
+    }
+
+    async fetch() {
+        let tabs = await this.client.tabs();
+        for (let tab of tabs) {
+            if (!this.tabs.some(t => t.id === tab.id)) {
+                this.add(tab);
+            }
+        }
+    }
+
+    all(): TabState[] {
+        return this.tabs;
     }
 
     getActive(): TabState | undefined {
@@ -91,9 +118,7 @@ export class Tabs {
 
     clear() {
         this.setTabs([]);
-        for (let connection of this.connections.values()) {
-            connection.events.closeConnection();
-        }
+        this.connections.forEach(c => c.events.closeConnection());
         this.connections.clear();
     }
 
@@ -117,6 +142,10 @@ export class Tabs {
         let index = this.tabs.findIndex((tab) => tab.id === tabId);
         let tab = this.tabs[index];
 
+        if (tab.pinned) {
+            return;
+        }
+
         this.setTabs(tabs => tabs.filter(tab => tab.id !== tabId));
         this.connections.get(tabId)?.page.close();
         this.connections.get(tabId)?.events.closeConnection();
@@ -127,7 +156,7 @@ export class Tabs {
         }
 
         if (tab.active) {
-            let newActiveTabIndex = index - 1 < 0 ? 0 : index - 1;
+            let newActiveTabIndex = Math.max(index - 1, 0);
             this.activate(this.tabs[newActiveTabIndex].id);
         }
     }
@@ -136,7 +165,7 @@ export class Tabs {
         const tab = this.tabs.find(t => t.id === tabId);
         if (!tab || tab.pinned) return;
 
-        this.bookmarks.add(tab.title, tab.url, tab.favicon);
+        this.callbacks.onBookmarkAdd(tab.title, tab.url, tab.favicon);
         this.setTabs(t => t.id === tabId, "pinned", true);
     }
 
@@ -144,7 +173,7 @@ export class Tabs {
         const tab = this.tabs.find(t => t.id === tabId);
         if (!tab || !tab.pinned) return;
 
-        this.bookmarks.remove(tab.url);
+        this.callbacks.onBookmarkRemove(tab.url);
         this.setTabs(t => t.id === tabId, "pinned", false);
     }
 
@@ -162,63 +191,7 @@ export class Tabs {
             events: events
         });
 
-        events.on("Title", (title: string) => this.setTabs(t => t.id === id, "title", title));
-        events.on("Url", (url: string) => this.setTabs(t => t.id === id, "url", url));
-        events.on("Favicon", (url: string) => this.setTabs(t => t.id === id, "favicon", url));
-        events.on("NewTab", (url: string) => this.new(url));
-        events.on("UrlHovered", (url: string) => this.setTabs(t => t.id === id, "hoveredUrl", url));
-        events.on("LoadState", (state: LoadState) => {
-            this.setTabs(t => t.id === id, "isLoading", state.status === LoadStatus.Loading);
-            this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
-            this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
-        });
-        events.on("ExternalLink", async (url: string) => {
-            if (!this.config.externalLinksAllowed) {
-                console.error("ExternalLink event received when external links are not allowed, ignoring.");
-                return;
-            }
-
-            if (url !== "") {
-                let confirmed = await confirm("Open external link? (" + url + ")");
-                if (confirmed) {
-                    invoke("open_link", { url: url }).catch((e) => {
-                        console.error("Failed to open external link:", e);
-                    });
-                }
-            }
-        });
-        events.on("DownloadProgress", (progress: DownloadProgress) => {
-            if (!this.config.downloadAllowed) {
-                console.error("DownloadProgress event received in observer mode, ignoring.");
-                return;
-            }
-            this.downloads.update({
-                id: progress.id,
-                path: progress.path,
-                received: progress.received,
-                total: progress.total,
-                is_complete: progress.is_complete,
-                is_aborted: progress.is_aborted,
-                cancel: () => tab.cancelDownloading(progress.id)
-            });
-        });
-        events.on("FileDialog", async (dialog: FileDialog) => {
-            if (!this.config.uploadAllowed) {
-                console.error("FileDialog event received when uploads are not allowed, ignoring.");
-                return;
-            }
-            const file = await open({
-                title: dialog.title,
-                defaultPath: dialog.default_file_path,
-            });
-            if (file === null) {
-                tab.cancelFileDialog();
-            } else if (Array.isArray(file)) {
-                tab.continueFileDialog(file);
-            } else {
-                tab.continueFileDialog([file]);
-            }
-        });
+        this.setupTabEvents(id, events, tab);
 
         let state: TabState = {
             id: id,
@@ -234,8 +207,8 @@ export class Tabs {
             pinned: partial.pinned || false,
 
             goTo: (url: string) => this.navigate(id, url),
-            activate: () => this.activate(tab.id),
-            close: () => this.close(tab.id),
+            activate: () => this.activate(id),
+            close: () => this.close(id),
             goBack: () => this.connections.get(id)?.page.back(),
             goForward: () => this.connections.get(id)?.page.forward(),
             reload: () => this.connections.get(id)?.page.reload(),
@@ -254,13 +227,32 @@ export class Tabs {
         this.setTabs((prev) => [...prev, state]);
     }
 
-    async fetch() {
-        let tabs = await this.client.tabs();
-        for (let tab of tabs) {
-            if (!this.tabs.some(t => t.id === tab.id)) {
-                this.add(tab);
-            }
-        }
+    private setupTabEvents(id: TabId, events: TabEventStream, tab: Tab) {
+        events.on("Title", (title: string) => this.setTabs(t => t.id === id, "title", title));
+        events.on("Url", (url: string) => this.setTabs(t => t.id === id, "url", url));
+        events.on("Favicon", (url: string) => this.setTabs(t => t.id === id, "favicon", url));
+        events.on("NewTab", (url: string) => this.new(url));
+        events.on("UrlHovered", (url: string) => this.setTabs(t => t.id === id, "hoveredUrl", url));
+        events.on("LoadState", (state: LoadState) => {
+            this.setTabs(t => t.id === id, "isLoading", state.status === LoadStatus.Loading);
+            this.setTabs(t => t.id === id, "canGoBack", state.canGoBack);
+            this.setTabs(t => t.id === id, "canGoForward", state.canGoForward);
+        });
+        events.on("ExternalLink", async (url: string) => await this.callbacks.onExternalLink(url));
+        events.on("DownloadProgress", (progress: DownloadProgress) => {
+            this.callbacks.onDownloadUpdate({
+                id: progress.id,
+                path: progress.path,
+                received: progress.received,
+                total: progress.total,
+                is_complete: progress.is_complete,
+                is_aborted: progress.is_aborted,
+                cancel: () => tab.cancelDownloading(progress.id)
+            });
+        });
+        events.on("FileDialog", async (dialog: FileDialog) => {
+            await this.callbacks.onFileDialog(dialog, tab);
+        });
     }
 
     private setActive(id: TabId, active: boolean) {
@@ -274,5 +266,4 @@ export class Tabs {
         let connection = this.connections.get(id)!;
         active ? connection.page.startVideo() : connection.page.stopVideo();
     }
-
 }

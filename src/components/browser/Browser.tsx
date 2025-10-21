@@ -1,9 +1,10 @@
 import { createEffect, onCleanup, onMount, createSignal } from "solid-js";
-import { AppState, TabConnection } from "../../state/state";
+import { AppState } from "../../state/state";
 import "./Browser.css";
 import { domCodeToKeyCode } from "../../keyboard/keycodes";
 import { Cursor } from "cef-client";
 import BrowserContextMenu from "./BrowserContextMenu";
+import { TabConnection } from "../../state/tabs";
 
 
 function Browser(props: { app: AppState }) {
@@ -43,13 +44,13 @@ function Browser(props: { app: AppState }) {
   });
 
   createEffect(() => {
-    const tabState = props.app.getActiveTab();
+    const tabState = props.app.tabs.getActive();
     if (tabState === undefined) {
       renderer.clear();
       return;
     }
 
-    const connection = props.app.connections.get(tabState.id)!;
+    const connection = props.app.tabs.connections.get(tabState.id)!;
     connection.events.on("Frame", (frame) => {
       fpsTracker.update();
       renderer.render(frame);

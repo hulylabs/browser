@@ -5,11 +5,11 @@ import { AppState } from "../../state/state";
 import { createMemo, JSX, Show } from "solid-js";
 
 function BrowserContextMenu(props: { app: AppState, children: JSX.Element }) {
-    let activeTabMemo = createMemo(() => props.app.getActiveTab());
+    let activeTabMemo = createMemo(() => props.app.tabs.getActive());
     let openNewTab = () => {
         let url = activeTabMemo()?.hoveredUrl;
         if (url && url !== "") {
-            props.app.newTab(url);
+            props.app.tabs.new(url);
         }
     }
 

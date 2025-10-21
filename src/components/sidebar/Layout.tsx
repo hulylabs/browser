@@ -14,7 +14,7 @@ import Bookmarks from "./Bookmarks";
 export default function Sidebar(props: { app: AppState }) {
     const [version] = createResource(getVersion);
 
-    const tabs = () => props.app.tabs.filter(t => !t.pinned);
+    const tabs = () => props.app.tabs.all().filter(t => !t.pinned);
 
     const [showInput, setShowInput] = createSignal(false);
     const onNewTabClick = () => setShowInput(true);

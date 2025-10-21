@@ -1,8 +1,8 @@
 import styles from "./Tab.module.scss";
 
-import { TabState } from "../../state/state";
 import { Show } from "solid-js";
 import { PinIcon, XIcon } from "lucide-solid";
+import { TabState } from "../../state/tabs";
 
 export default function Tab(props: { tab: TabState }) {
     let activate = (event: MouseEvent) => {

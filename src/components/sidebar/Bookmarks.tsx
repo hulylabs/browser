@@ -4,7 +4,7 @@ import styles from "./Bookmarks.module.scss";
 import { XIcon } from "lucide-solid";
 
 export default function Bookmarks(props: { app: AppState }) {
-    const bookmarks = () => props.app.tabs.filter(t => t.pinned);
+    const bookmarks = () => props.app.tabs.all().filter(t => t.pinned);
 
     const close = (bookmark: any, event: MouseEvent) => {
         event.stopPropagation();

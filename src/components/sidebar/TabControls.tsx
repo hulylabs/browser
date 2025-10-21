@@ -5,7 +5,7 @@ import { createMemo, Show } from "solid-js";
 import { ArrowLeftIcon, ArrowRightIcon, RefreshCcw } from "lucide-solid";
 
 export default function TabControls(props: { app: AppState }) {
-    const activeTab = createMemo(() => props.app.getActiveTab());
+    const activeTab = createMemo(() => props.app.tabs.getActive());
 
     return (
         <div class={styles.tabControls}>

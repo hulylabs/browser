@@ -1,9 +1,9 @@
-import { Browser, connect } from "cef-client";
+import { Browser, connect, FileDialog, Tab } from "cef-client";
 import { ProfileManager } from "./profiles";
 import { invoke } from "@tauri-apps/api/core";
 import { Setter } from "solid-js";
 import { Shortcuts } from "./shortcuts";
-import { Downloads } from "./downloads";
+import { DownloadItem, Downloads } from "./downloads";
 import { UIState } from "./ui";
 import { Bookmarks } from "./bookmarks";
 import { BaseDirectory } from "@tauri-apps/api/path";
@@ -26,12 +26,61 @@ export class AppState {
         this.config = config;
         this.client = client;
 
-        this.tabs = new Tabs(config, client);
         this.downloads = new Downloads();
-        this.shortcuts = new Shortcuts(this);
         this.bookmarks = new Bookmarks();
-        this.profiles = profiles;
         this.ui = new UIState();
+
+        const tabCallbacks = {
+            onBookmarkAdd: (title: string, url: string, favicon: string) => this.bookmarks.add(title, url, favicon),
+            onBookmarkRemove: (url: string) => this.bookmarks.remove(url),
+            onDownloadUpdate: (download: DownloadItem) => {
+                if (!config.downloadAllowed) {
+                    console.error("DownloadProgress event received in observer mode, ignoring.");
+                    return;
+                }
+                this.downloads.update(download);
+            },
+            onUIFocusUrl: () => this.ui.focusUrl(),
+            onExternalLink: async (url: string) => {
+                if (!config.externalLinksAllowed) {
+                    console.error("ExternalLink event received when external links are not allowed, ignoring.");
+                    return;
+                }
+
+                if (url !== "") {
+                    const { confirm } = await import('@tauri-apps/plugin-dialog');
+                    let confirmed = await confirm("Open external link? (" + url + ")");
+                    if (confirmed) {
+                        invoke("open_link", { url: url }).catch((e) => {
+                            console.error("Failed to open external link:", e);
+                        });
+                    }
+                }
+            },
+            onFileDialog: async (dialog: FileDialog, tab: Tab) => {
+                if (!config.uploadAllowed) {
+                    console.error("FileDialog event received when uploads are not allowed, ignoring.");
+                    return;
+                }
+
+                const { open } = await import('@tauri-apps/plugin-dialog');
+                const file = await open({
+                    title: dialog.title,
+                    defaultPath: dialog.default_file_path,
+                });
+                if (file === null) {
+                    tab.cancelFileDialog();
+                } else if (Array.isArray(file)) {
+                    tab.continueFileDialog(file);
+                } else {
+                    tab.continueFileDialog([file]);
+                }
+            }
+        };
+
+        this.tabs = new Tabs(client, tabCallbacks);
+        this.shortcuts = new Shortcuts(this);
+        this.profiles = profiles;
 
         if (this.config.shouldRestore) {
             this.restore(client);
