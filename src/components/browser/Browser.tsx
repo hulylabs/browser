@@ -6,11 +6,10 @@ import { Cursor } from "cef-client";
 import BrowserContextMenu from "./BrowserContextMenu";
 import { TabConnection } from "../../state/tabs";
 
-
 function Browser(props: { app: AppState }) {
   let canvasContainer!: HTMLDivElement;
   let canvas!: HTMLCanvasElement;
-  let renderer: Renderer;
+  let renderer: Renderer | ServerSideRenderer;
   let resizeObserver!: ResizeObserver;
   let timeoutId: any = 0;
 
@@ -31,7 +30,8 @@ function Browser(props: { app: AppState }) {
   }
 
   onMount(() => {
-    renderer = new Renderer(canvas);
+    const useServerSize = props.app.config.useServerSize;
+    renderer = useServerSize ? new ServerSideRenderer(canvas) : new Renderer(canvas);
     handleResize();
 
     resizeObserver = new ResizeObserver(debouncedResize);
@@ -184,5 +184,69 @@ class FPSTracker {
       this.frameCount = 0;
       this.lastTime = now;
     }
+  }
+}
+
+class ServerSideRenderer {
+  private canvas: HTMLCanvasElement;
+  private canvasCtx: CanvasRenderingContext2D;
+  private offscreen: HTMLCanvasElement;
+  private offscreenCtx: CanvasRenderingContext2D;
+  private imageData: ImageData;
+  private dpr: number = window.devicePixelRatio || 1;
+
+  constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
+    this.canvasCtx = canvas.getContext("2d")!;
+
+    this.offscreen = document.createElement("canvas");
+    this.offscreenCtx = this.offscreen.getContext("2d")!;
+
+    this.imageData = new ImageData(1, 1);
+  }
+
+  render(frame: { data: Uint8Array; width: number; height: number }) {
+    this.clear();
+
+    if (this.imageData.width != frame.width || this.imageData.height != frame.height) {
+      this.imageData = new ImageData(frame.width, frame.height);
+      this.offscreen.width = frame.width;
+      this.offscreen.height = frame.height;
+    }
+
+    this.imageData.data.set(frame.data);
+    this.offscreenCtx.putImageData(this.imageData, 0, 0);
+
+    const canvasAspect = this.canvas.width / this.canvas.height;
+    const frameAspect = frame.width / frame.height;
+
+    let drawWidth, drawHeight;
+
+    if (frameAspect > canvasAspect) {
+      drawWidth = this.canvas.width;
+      drawHeight = this.canvas.width / frameAspect;
+    } else {
+      drawHeight = this.canvas.height;
+      drawWidth = this.canvas.height * frameAspect;
+    }
+
+    const offsetX = (this.canvas.width - drawWidth) / 2;
+    const offsetY = (this.canvas.height - drawHeight) / 2;
+
+    this.canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.canvasCtx.drawImage(this.offscreen, offsetX, offsetY, drawWidth, drawHeight);
+  }
+
+  clear() {
+    this.canvasCtx.fillStyle = "#ffffff";
+    this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  resize(width: number, height: number) {
+    this.canvas.width = width * this.dpr;
+    this.canvas.height = height * this.dpr;
+
+    this.canvas.style.width = `${width}px`;
+    this.canvas.style.height = `${height}px`;
   }
 }

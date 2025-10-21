@@ -12,7 +12,7 @@ import { AppConfig, browserConfig, observerConfig } from "./config";
 import { Tabs } from "./tabs";
 
 export class AppState {
-    private config: AppConfig;
+    config: AppConfig;
     private client: Browser;
 
     tabs: Tabs;

@@ -1,4 +1,4 @@
-import { createResource, For, Show, createEffect } from "solid-js";
+import { createResource, For, Show } from "solid-js";
 import { AppState } from "../../state/state";
 
 export function Profiles(props: { app: AppState }) {
@@ -8,11 +8,11 @@ export function Profiles(props: { app: AppState }) {
   };
   const [profiles] = createResource(fetchProfiles);
 
-  createEffect(async () => {
-    let profile = props.app.profiles!.selected();
-    let client = await props.app.profiles!.connect(profile);
+  const handleProfileSelect = async (profileValue: string) => {
+    props.app.profiles?.setSelected(profileValue);
+    let client = await props.app.profiles!.connect(profileValue);
     await props.app.setClient(client);
-  });
+  };
 
   return (
     <div class="profiles">
@@ -28,7 +28,7 @@ export function Profiles(props: { app: AppState }) {
         <div>
           <select
             value={props.app.profiles?.selected()}
-            onInput={e => props.app.profiles?.setSelected((e.target as HTMLSelectElement).value)}
+            onInput={e => handleProfileSelect((e.target as HTMLSelectElement).value)}
           >
             <option value="" disabled selected>Select a profile</option>
             <For each={profiles()}>

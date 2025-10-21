@@ -50,17 +50,17 @@ export class Shortcuts {
         this.shortcuts.set("ctrl+shift+tab", "previousTab");
 
         this.actions.set("showInput", { ctx: "global", execute: () => app.ui.showNewTabInput() });
-        this.actions.set("closeTab", { ctx: "global", execute: () => app.getActiveTab()?.close() });
-        this.actions.set("reload", { ctx: "webpage", execute: () => app.getActiveTab()?.reload() });
-        this.actions.set("selectAll", { ctx: "webpage", execute: () => app.getActiveTab()?.selectAll() });
-        this.actions.set("copy", { ctx: "webpage", execute: () => app.getActiveTab()?.copy() });
-        this.actions.set("paste", { ctx: "webpage", execute: () => app.getActiveTab()?.paste() });
-        this.actions.set("cut", { ctx: "webpage", execute: () => app.getActiveTab()?.cut() });
-        this.actions.set("undo", { ctx: "webpage", execute: () => app.getActiveTab()?.undo() });
-        this.actions.set("redo", { ctx: "webpage", execute: () => app.getActiveTab()?.redo() });
+        this.actions.set("closeTab", { ctx: "global", execute: () => app.tabs.getActive()?.close() });
+        this.actions.set("reload", { ctx: "webpage", execute: () => app.tabs.getActive()?.reload() });
+        this.actions.set("selectAll", { ctx: "webpage", execute: () => app.tabs.getActive()?.selectAll() });
+        this.actions.set("copy", { ctx: "webpage", execute: () => app.tabs.getActive()?.copy() });
+        this.actions.set("paste", { ctx: "webpage", execute: () => app.tabs.getActive()?.paste() });
+        this.actions.set("cut", { ctx: "webpage", execute: () => app.tabs.getActive()?.cut() });
+        this.actions.set("undo", { ctx: "webpage", execute: () => app.tabs.getActive()?.undo() });
+        this.actions.set("redo", { ctx: "webpage", execute: () => app.tabs.getActive()?.redo() });
         this.actions.set("focusOnAddressBar", { ctx: "global", execute: () => app.ui.focusUrl() });
-        this.actions.set("nextTab", { ctx: "global", execute: () => app.shiftTab(true) });
-        this.actions.set("previousTab", { ctx: "global", execute: () => app.shiftTab(false) });
+        this.actions.set("nextTab", { ctx: "global", execute: () => app.tabs.shift(true) });
+        this.actions.set("previousTab", { ctx: "global", execute: () => app.tabs.shift(false) });
     }
 
     checkShortcutConflict(e: KeyboardEvent): boolean {

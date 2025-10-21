@@ -5,6 +5,7 @@ export interface AppConfig {
     downloadAllowed: boolean;
     uploadAllowed: boolean;
     externalLinksAllowed: boolean;
+    useServerSize: boolean;
 }
 
 export const browserConfig: AppConfig = {
@@ -14,6 +15,7 @@ export const browserConfig: AppConfig = {
     downloadAllowed: true,
     uploadAllowed: true,
     externalLinksAllowed: true,
+    useServerSize: false,
 };
 
 export const observerConfig: AppConfig = {
@@ -23,4 +25,5 @@ export const observerConfig: AppConfig = {
     downloadAllowed: false,
     uploadAllowed: false,
     externalLinksAllowed: false,
+    useServerSize: true,
 };
