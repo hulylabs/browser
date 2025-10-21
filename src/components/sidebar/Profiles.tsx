@@ -4,7 +4,7 @@ import { AppState } from "../../state/state";
 export function Profiles(props: { app: AppState }) {
   const fetchProfiles = async () => {
     let profiles = await props.app.profiles!.getProfiles();
-    return profiles; profiles
+    return profiles;
   };
   const [profiles] = createResource(fetchProfiles);
 
