@@ -1,5 +1,6 @@
 import { createResource, For, Show } from "solid-js";
 import { AppState } from "../../state/state";
+import styles from "./Profiles.module.scss";
 
 export function Profiles(props: { app: AppState }) {
   const fetchProfiles = async () => {
@@ -15,30 +16,30 @@ export function Profiles(props: { app: AppState }) {
   };
 
   return (
-    <div class="profiles">
-      <h4>Profiles</h4>
+    <div class={styles.profiles}>
+      <h4 class={styles.header}>Profiles</h4>
+
       <Show when={profiles.loading}>
-        <p>Loading...</p>
-      </Show>
-      <Show when={profiles.error}>
-        <p>Couldn't load profiles: {profiles.error.message}</p>
+        <div class={styles.loadingState}>
+          Loading profiles...
+        </div>
       </Show>
 
       <Show when={profiles()}>
-        <div>
-          <select
-            value={props.app.profiles?.selected()}
-            onInput={e => handleProfileSelect((e.target as HTMLSelectElement).value)}
-          >
-            <option value="" disabled selected>Select a profile</option>
-            <For each={profiles()}>
-              {(profile) => (
-                <option value={profile}>{profile}</option>
-              )}
-            </For>
-          </select>
-        </div>
-      </Show>
-    </div>
+        <select
+          class={styles.select}
+          value={props.app.profiles?.selected()}
+          onInput={e => handleProfileSelect((e.target as HTMLSelectElement).value)}
+        >
+          <For each={profiles()}>
+            {(profile) => (
+              <option class={styles.option} value={profile}>
+                {profile}
+              </option>
+            )}
+          </For>
+        </select>
+      </Show >
+    </div >
   );
 }

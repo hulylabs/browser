@@ -43,7 +43,7 @@ export class AppState {
             onUIFocusUrl: () => this.ui.focusUrl(),
             onExternalLink: async (url: string) => {
                 if (!config.externalLinksAllowed) {
-                    console.error("ExternalLink event received when external links are not allowed, ignoring.");
+                    console.warn("ExternalLink event received when external links are not allowed, ignoring.");
                     return;
                 }
 
@@ -59,7 +59,7 @@ export class AppState {
             },
             onFileDialog: async (dialog: FileDialog, tab: Tab) => {
                 if (!config.uploadAllowed) {
-                    console.error("FileDialog event received when uploads are not allowed, ignoring.");
+                    console.warn("FileDialog event received when uploads are not allowed, ignoring.");
                     return;
                 }
 
@@ -101,7 +101,7 @@ export class AppState {
 
     async save() {
         if (!this.config.shouldSave) {
-            console.error("Save operation is disabled in the current config.");
+            console.warn("Save operation is disabled in the current config.");
             return;
         }
 
