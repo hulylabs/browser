@@ -57,7 +57,7 @@ function Browser(props: { app: AppState }) {
     });
 
     connection.events.on("Cursor", (cursor) => InputHandler.setCursor(canvas, cursor));
-    InputHandler.setupEventListeners(props.app, canvas, connection);
+    InputHandler.setupEventListeners(props.app, canvas, connection, renderer);
   });
 
   return (
@@ -102,6 +102,15 @@ class Renderer {
     this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
+  transformCoordinates(canvasX: number, canvasY: number): { x: number; y: number } {
+    // For regular renderer, coordinates are already correctly mapped
+    // Just account for device pixel ratio
+    return {
+      x: Math.round(canvasX * this.dpr),
+      y: Math.round(canvasY * this.dpr)
+    };
+  }
+
   resize(width: number, height: number) {
     this.canvas.width = width * this.dpr;
     this.canvas.height = height * this.dpr;
@@ -121,11 +130,30 @@ class InputHandler {
     [Cursor.Crosshair]: "crosshair",
   };
 
-  static setupEventListeners(app: AppState, canvas: HTMLCanvasElement, connection: TabConnection) {
-    canvas.onmousemove = (e) => connection.page.mouseMove(e.offsetX, e.offsetY);
-    canvas.onmousedown = (e) => connection.page.click(e.offsetX, e.offsetY, e.button, true);
-    canvas.onmouseup = (e) => connection.page.click(e.offsetX, e.offsetY, e.button, false);
-    canvas.onwheel = (e) => connection.page.scroll(e.offsetX, e.offsetY, -e.deltaX, -e.deltaY);
+  static setupEventListeners(app: AppState, canvas: HTMLCanvasElement, connection: TabConnection, renderer: Renderer | ServerSideRenderer) {
+    const transformCoordinates = (x: number, y: number) => {
+      if (renderer instanceof ServerSideRenderer) {
+        return renderer.convertMousePosition(x, y);
+      }
+      return { x, y };
+    };
+
+    canvas.onmousemove = (e) => {
+      const coords = transformCoordinates(e.offsetX, e.offsetY);
+      connection.page.mouseMove(coords.x, coords.y);
+    };
+    canvas.onmousedown = (e) => {
+      const coords = transformCoordinates(e.offsetX, e.offsetY);
+      connection.page.click(coords.x, coords.y, e.button, true);
+    };
+    canvas.onmouseup = (e) => {
+      const coords = transformCoordinates(e.offsetX, e.offsetY);
+      connection.page.click(coords.x, coords.y, e.button, false);
+    };
+    canvas.onwheel = (e) => {
+      const coords = transformCoordinates(e.offsetX, e.offsetY);
+      connection.page.scroll(coords.x, coords.y, -e.deltaX, -e.deltaY);
+    };
 
     canvas.onkeydown = (e) => {
       if (app.shortcuts.checkShortcutConflict(e)) return;
@@ -187,6 +215,14 @@ class FPSTracker {
   }
 }
 
+interface DrawParams {
+  scale: number;
+  dx: number;
+  dy: number;
+  w: number;
+  h: number;
+}
+
 class ServerSideRenderer {
   private canvas: HTMLCanvasElement;
   private canvasCtx: CanvasRenderingContext2D;
@@ -194,6 +230,8 @@ class ServerSideRenderer {
   private offscreenCtx: CanvasRenderingContext2D;
   private imageData: ImageData;
   private dpr: number = window.devicePixelRatio || 1;
+
+  private drawParams: DrawParams = { scale: 1, dx: 0, dy: 0, w: 0, h: 0 };
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -212,34 +250,25 @@ class ServerSideRenderer {
       this.imageData = new ImageData(frame.width, frame.height);
       this.offscreen.width = frame.width;
       this.offscreen.height = frame.height;
+      this.calculateDrawParams();
     }
 
     this.imageData.data.set(frame.data);
     this.offscreenCtx.putImageData(this.imageData, 0, 0);
 
-    const canvasAspect = this.canvas.width / this.canvas.height;
-    const frameAspect = frame.width / frame.height;
-
-    let drawWidth, drawHeight;
-
-    if (frameAspect > canvasAspect) {
-      drawWidth = this.canvas.width;
-      drawHeight = this.canvas.width / frameAspect;
-    } else {
-      drawHeight = this.canvas.height;
-      drawWidth = this.canvas.height * frameAspect;
-    }
-
-    const offsetX = (this.canvas.width - drawWidth) / 2;
-    const offsetY = (this.canvas.height - drawHeight) / 2;
-
-    this.canvasCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.canvasCtx.drawImage(this.offscreen, offsetX, offsetY, drawWidth, drawHeight);
+    this.canvasCtx.drawImage(this.offscreen, this.drawParams.dx, this.drawParams.dy, this.drawParams.w, this.drawParams.h);
   }
 
   clear() {
-    this.canvasCtx.fillStyle = "#ffffff";
+    this.canvasCtx.fillStyle = "#fff";
     this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  convertMousePosition(x: number, y: number): { x: number; y: number } {
+    return {
+      x: (x - this.drawParams.dx) / this.drawParams.scale,
+      y: (y - this.drawParams.dy) / this.drawParams.scale,
+    };
   }
 
   resize(width: number, height: number) {
@@ -248,5 +277,14 @@ class ServerSideRenderer {
 
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
+
+    this.calculateDrawParams();
+  }
+
+  private calculateDrawParams() {
+    const scale = Math.min(this.canvas.width / this.offscreen.width, this.canvas.height / this.offscreen.height);
+    const dx = (this.canvas.width - this.offscreen.width * scale) / 2;
+    const dy = (this.canvas.height - this.offscreen.height * scale) / 2;
+    this.drawParams = { scale, dx, dy, w: this.offscreen.width * scale, h: this.offscreen.height * scale };
   }
 }
