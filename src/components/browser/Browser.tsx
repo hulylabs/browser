@@ -266,8 +266,8 @@ class ServerSideRenderer {
 
   convertMousePosition(x: number, y: number): { x: number; y: number } {
     return {
-      x: (x - this.drawParams.dx) / this.drawParams.scale,
-      y: (y - this.drawParams.dy) / this.drawParams.scale,
+      x: (x - this.drawParams.dx / this.dpr) / this.drawParams.scale,
+      y: (y - this.drawParams.dy / this.dpr) / this.drawParams.scale,
     };
   }
 
