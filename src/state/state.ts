@@ -127,6 +127,9 @@ export class AppState {
             for (let tab of tabs) {
                 let newTab = await client.openTab({ url: tab.url });
                 this.tabs.add(newTab, tab);
+                if (tab.active) {
+                    newTab.startVideo();
+                }
             }
         } catch (err) {
             console.error("Error restoring tabs:", err);
